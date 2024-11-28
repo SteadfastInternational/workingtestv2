@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const Order = require('../models/Order');
-const Cart = require('../models/Cart');
+const Cart = require('../models/cart');
 const Paystack = require('paystack-node');
 const Bull = require('bull');
 const User = require('../models/user');
