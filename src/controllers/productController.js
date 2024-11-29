@@ -318,35 +318,17 @@ exports.getAllProducts = async (req, res) => {
     const sortBy = req.query.sortBy || 'name'; // Default sort by name
     const sortOrder = req.query.sortOrder === 'desc' ? -1 : 1; // Default sort ascending
 
+    // Fetching products with pagination and sorting
     const products = await Product.find()
       .skip(skip)
       .limit(limit)
       .sort({ [sortBy]: sortOrder });
 
-    const totalProducts = await Product.countDocuments();
-    const totalPages = Math.ceil(totalProducts / limit);
-
-    // Pagination check: if requested page exceeds available pages
-    if (page > totalPages) {
-      return res.status(400).json({
-        success: false,
-        message: 'Page number exceeds available pages',
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-      message: 'Products fetched successfully',
-      products,
-      totalProducts,
-      currentPage: page,
-      totalPages,
-    });
+    // Return only the products
+    res.status(200).json(products);
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message || 'Error fetching products',
-    });
+    // Return an empty array in case of server error
+    res.status(500).json([]);
   }
 };
 
