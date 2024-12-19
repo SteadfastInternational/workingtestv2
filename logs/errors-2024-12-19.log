@@ -1,0 +1,2 @@
+2024-12-19 21:11:47 [ERROR]: Error fetching coupons from external API: Invalid response from coupon API
+2024-12-19 21:20:32 [ERROR]: Error saving new coupons: Coupon validation failed: discountPercentage: Path `discountPercentage` is required.
