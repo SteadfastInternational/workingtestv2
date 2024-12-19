@@ -80,11 +80,6 @@ const createCart = async (req, res) => {
       // Apply a 1% discount when the coupon code is applied
       discountPercentage = 1;  // 1% discount
       discountAmount = (totalCartPrice * discountPercentage) / 100;
-
-      // Update the coupon's balance with the discount amount
-      coupon.balance += discountAmount;
-      coupon.usageCount += 1;  // Increment usage count
-      await coupon.save();
     }
 
     const finalPrice = totalCartPrice - discountAmount;
@@ -137,67 +132,6 @@ const createCart = async (req, res) => {
 };
 
 // Payment Success Controller (update the product stock after payment success)
-const updateStockAfterPayment = async (paymentStatus, cartId) => {
-  try {
-    if (paymentStatus !== 'paid') {
-      logger.error(`Payment status for cart ID ${cartId} is not successful. No stock update.`);
-      return;
-    }
-
-    // Find the cart
-    const cart = await Cart.findById(cartId);
-    if (!cart) {
-      logger.error(`Cart with ID ${cartId} not found`);
-      return;
-    }
-
-    for (const item of cart.items) {
-      let product;
-      if (item.productId) {
-        product = await Product.findById(item.productId);
-      } else if (item.productName) {
-        // Fetch product by name
-        product = await Product.findOne({ name: item.productName });
-      }
-
-      if (!product) {
-        logger.error(`Product with ID or Name ${item.productId || item.productName} not found`);
-        continue;
-      }
-
-      // Handle variations and update stock accordingly
-      if (item.variationOptionTitle) {
-        const variation = product.variation_options.find(
-          (option) => option.title === item.variationOptionTitle
-        );
-        if (variation) {
-          if (variation.quantity >= item.quantity) {
-            variation.quantity -= item.quantity;
-            await product.save();
-          } else {
-            logger.error(`Insufficient stock for variation ${variation.title}`);
-            continue;
-          }
-        } else {
-          logger.error(`Variation ${item.variationOptionTitle} not found for product ${product.name}`);
-          continue;
-        }
-      } else {
-        if (product.quantity >= item.quantity) {
-          product.quantity -= item.quantity;
-          await product.save();
-        } else {
-          logger.error(`Insufficient stock for product ${product.name}`);
-          continue;
-        }
-      }
-    }
-
-    logger.info(`Stock successfully updated for cart ID ${cartId}`);
-  } catch (error) {
-    logger.error(`Error updating stock for cart ID ${cartId}: ${error.message}`, { stack: error.stack });
-  }
-};
 
 
 // Fetch all carts
@@ -269,4 +203,4 @@ const getCartById = async (req, res) => {
   }
 };
 
-module.exports = { createCart, updateStockAfterPayment , getAllCarts, getCartById };
+module.exports = { createCart, getAllCarts, getCartById };

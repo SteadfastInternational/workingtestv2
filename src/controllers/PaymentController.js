@@ -6,7 +6,7 @@ const OrderController = require('./OrderController');
 const { sendSuccessEmail, sendFailureEmail } = require('../mailtrap/email');
 const { logError, logInfo } = require('../utils/logger');
 const generateInvoiceHtml = require('../templates/invoiceTemplate');
-const { updateStockAfterPayment } = require('./cartController'); // Import the stock update function
+const { updateStockAfterPayment } = require('./cartV2Controller'); // Import the stock update function
 
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 const PAYSTACK_WEBHOOK_SECRET = process.env.PAYSTACK_WEBHOOK_SECRET;

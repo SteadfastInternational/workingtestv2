@@ -3,7 +3,7 @@ const Coupon = require('../models/coupon');
 const logger = require('../utils/logger');
 
 // External backend URL (replace with your actual backend API URL)
-const COUPON_API_URL = 'https://steadfastpadibackend-1.onrender.com/api/v1/coupons';
+const COUPON_API_URL = 'https://steadfastpadibackend.onrender.com/api/v1/coupons';
 
 // Fetch new coupons from the external API
 async function fetchCouponsFromAPI() {
