@@ -1,25 +1,27 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 
-// Define the schema
+// User Schema
 const userSchema = new mongoose.Schema(
   {
     firstName: {
       type: String,
       required: [true, 'Please provide your first name'],
+      trim: true,
     },
     lastName: {
       type: String,
       required: [true, 'Please provide your last name'],
+      trim: true,
     },
     email: {
       type: String,
       required: [true, 'Please provide your email address'],
       unique: true,
       lowercase: true,
+      trim: true,
       validate: {
         validator: function (email) {
-          // Simple regex for email validation
           return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
         },
         message: 'Please provide a valid email address',
@@ -29,9 +31,11 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Please provide a password'],
       minlength: 8,
-      select: false, // Exclude password from query results by default
+      select: false,
     },
-    passwordChangedAt: Date, // Timestamp for tracking password updates
+    passwordChangedAt: Date,
+    passwordResetToken: String,
+    passwordResetExpires: Date,
     createdAt: {
       type: Date,
       default: Date.now,
@@ -46,38 +50,31 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-// Pre-save middleware for password hashing
+// Middleware: Hash the password before saving
 userSchema.pre('save', async function (next) {
-  // Only hash the password if it is new or modified
   if (!this.isModified('password')) return next();
-
-  // Hash the password
   this.password = await bcrypt.hash(this.password, 12);
   next();
 });
 
-// Instance method to compare passwords
-userSchema.methods.correctPassword = async function (
-  candidatePassword,
-  userPassword
-) {
-  return await bcrypt.compare(candidatePassword, userPassword);
-};
-
-// Middleware to update the passwordChangedAt field
+// Middleware: Update `passwordChangedAt` when password changes
 userSchema.pre('save', function (next) {
   if (!this.isModified('password') || this.isNew) return next();
-
-  this.passwordChangedAt = Date.now() - 1000; // Ensure the timestamp is earlier than JWT issuance
+  this.passwordChangedAt = Date.now() - 1000;
   next();
 });
 
-// Static method to find by email
+// Instance Method: Compare password
+userSchema.methods.correctPassword = async function (candidatePassword) {
+  return await bcrypt.compare(candidatePassword, this.password);
+};
+
+// Static Method: Find user by email
 userSchema.statics.findByEmail = function (email) {
   return this.findOne({ email });
 };
 
-// Compile the schema into a model
+// Compile the model
 const User = mongoose.model('User', userSchema);
 
 module.exports = User;

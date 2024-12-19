@@ -1,12 +1,14 @@
-// src/routes/OrderRoutes.js
 const express = require('express');
+const OrderController = require('../controllers/OrderController');
 const router = express.Router();
 
-// Import the Order controller methods
-const { createOrder, paymentCallback } = require('../controllers/OrderController');
+// Route to create a new order
+router.post('/create-order', OrderController.createOrder);
 
-// Define your routes
-router.post('/create-Order', createOrder);  // Ensure this handler is properly imported
-router.get('/payment/callback', paymentCallback);  // Same for this one
+// Route to update an order's status (e.g., On Transit, Delivered, Cancelled)
+router.put('/update-order-status/:orderId', OrderController.updateOrderStatus);
+
+// Route to fetch all orders
+router.get('/get-all-orders', OrderController.getAllOrders);
 
 module.exports = router;

@@ -1,4 +1,4 @@
-const mongoose = require('mongoose'); // Import Cloudinary SDK
+const mongoose = require('mongoose'); 
 const Product = require('../models/products'); // Assuming the Product model is in models/Product.js
 const cloudinary = require('cloudinary').v2;
 
@@ -44,15 +44,7 @@ exports.createProduct = async (req, res) => {
       gallery,
     } = req.body;
 
-    // Validate required fields for image URLs
-    if (!image || !image.thumbnail || !image.original) {
-      return res.status(400).json({
-        success: false,
-        message: 'Main image URLs (thumbnail and original) are required',
-      });
-    }
-
-    // Validate gallery URLs
+    // Validate gallery structure
     if (gallery && !Array.isArray(gallery)) {
       return res.status(400).json({
         success: false,
@@ -61,10 +53,10 @@ exports.createProduct = async (req, res) => {
     }
 
     // Validate each gallery URL is valid
-    if (gallery && gallery.some(url => !/^https?:\/\/[^\s]+$/.test(url))) {
+    if (gallery && gallery.some(item => !/^https?:\/\/[^\s]+$/.test(item.original))) {
       return res.status(400).json({
         success: false,
-        message: 'Each gallery item must be a valid URL',
+        message: 'Each gallery item must have valid URLs for "original" and "thumbnail"',
       });
     }
 
@@ -77,16 +69,10 @@ exports.createProduct = async (req, res) => {
     }
 
     // Calculate min_price and max_price based on variation price and sale_price
-    const variationPrices = variation_options.map(option => {
-      // Use sale_price if available, otherwise fallback to price
-      const priceToUse = option.sale_price || option.price;
-      return priceToUse;
-    });
-
+    const variationPrices = variation_options.map(option => option.sale_price || option.price);
     const min_price = Math.min(...variationPrices);
     const max_price = Math.max(...variationPrices);
 
-    // Validate min_price and max_price if they are numbers
     if (isNaN(min_price) || isNaN(max_price)) {
       return res.status(400).json({
         success: false,
@@ -94,22 +80,35 @@ exports.createProduct = async (req, res) => {
       });
     }
 
-    if (min_price && max_price && min_price > max_price) {
+    if (min_price > max_price) {
       return res.status(400).json({
         success: false,
         message: 'Min price cannot be greater than max price',
       });
     }
 
-    // Upload images to Cloudinary
-    const uploadedThumbnailUrl = await uploadImageToCloudinary(image.thumbnail);
-    const uploadedOriginalUrl = await uploadImageToCloudinary(image.original);
+    // Upload images to Cloudinary unless already hosted there
+    const uploadImage = async (url) => {
+      if (url.includes('res.cloudinary.com')) {
+        return url; // Skip upload if already hosted on Cloudinary
+      }
+      return await uploadImageToCloudinary(url);
+    };
+
+    const uploadedThumbnailUrl = await uploadImage(image.thumbnail);
+    const uploadedOriginalUrl = await uploadImage(image.original);
 
     const uploadedGalleryUrls = gallery
-      ? await Promise.all(gallery.map(url => uploadImageToCloudinary(url)))
+      ? await Promise.all(
+          gallery.map(async (item) => ({
+            id: item.id,
+            thumbnail: await uploadImage(item.thumbnail),
+            original: await uploadImage(item.original),
+          }))
+        )
       : [];
 
-    // Validate 'watt' field - Optional but should follow the alphanumeric pattern (e.g., 12w or 12watt)
+    // Validate 'watt' field
     if (watt && !/^[0-9]+w[a-z]*$/i.test(watt)) {
       return res.status(400).json({
         success: false,
@@ -133,17 +132,13 @@ exports.createProduct = async (req, res) => {
       product_type,
       variation_options,
       image: {
-        id: 1, // You can assign a unique ID here, or dynamically generate if needed
+        id: 1, // Assigning a unique ID
         thumbnail: uploadedThumbnailUrl,
         original: uploadedOriginalUrl,
       },
-      gallery: uploadedGalleryUrls.map((url, index) => ({
-        id: index + 1, // Adding IDs to gallery images dynamically
-        thumbnail: url,
-        original: url,
-      })),
-      min_price, // Automatically calculated
-      max_price, // Automatically calculated
+      gallery: uploadedGalleryUrls,
+      min_price,
+      max_price,
     });
 
     await newProduct.save();
@@ -160,7 +155,6 @@ exports.createProduct = async (req, res) => {
     });
   }
 };
-
 // Update Product with Image URLs (from JSON file)
 exports.updateProduct = async (req, res) => {
   try {

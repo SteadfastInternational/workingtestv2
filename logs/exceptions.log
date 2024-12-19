@@ -1,0 +1,105 @@
+2024-12-15 10:58:33 [ERROR]: OverwriteModelError: Cannot overwrite `Address` model once compiled.
+    at Mongoose.model (C:\Users\EMMANUEL\Desktop\New folder (8)\node_modules\mongoose\lib\mongoose.js:608:13)
+    at Object.<anonymous> (C:\Users\EMMANUEL\Desktop\New folder (8)\src\models\address.js:89:26)
+    at Module._compile (node:internal/modules/cjs/loader:1358:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1416:10)
+    at Module.load (node:internal/modules/cjs/loader:1208:32)
+    at Module._load (node:internal/modules/cjs/loader:1024:12)
+    at Module.require (node:internal/modules/cjs/loader:1233:19)
+    at require (node:internal/modules/helpers:179:18)
+    at Object.<anonymous> (C:\Users\EMMANUEL\Desktop\New folder (8)\src\controllers\cartController.js:3:22)
+    at Module._compile (node:internal/modules/cjs/loader:1358:14)
+2024-12-15 11:36:29 [ERROR]: Error: Route.get() requires a callback function but got a [object Undefined]
+    at Route.<computed> [as get] (C:\Users\EMMANUEL\Desktop\New folder (8)\node_modules\express\lib\router\route.js:216:15)
+    at proto.<computed> [as get] (C:\Users\EMMANUEL\Desktop\New folder (8)\node_modules\express\lib\router\index.js:521:19)
+    at Object.<anonymous> (C:\Users\EMMANUEL\Desktop\New folder (8)\src\routes\cartRoutes.js:14:8)
+    at Module._compile (node:internal/modules/cjs/loader:1358:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1416:10)
+    at Module.load (node:internal/modules/cjs/loader:1208:32)
+    at Module._load (node:internal/modules/cjs/loader:1024:12)
+    at Module.require (node:internal/modules/cjs/loader:1233:19)
+    at require (node:internal/modules/helpers:179:18)
+    at Object.<anonymous> (C:\Users\EMMANUEL\Desktop\New folder (8)\src\app.js:15:20)
+2024-12-15 11:40:08 [ERROR]: Error: Route.get() requires a callback function but got a [object Undefined]
+    at Route.<computed> [as get] (C:\Users\EMMANUEL\Desktop\New folder (8)\node_modules\express\lib\router\route.js:216:15)
+    at proto.<computed> [as get] (C:\Users\EMMANUEL\Desktop\New folder (8)\node_modules\express\lib\router\index.js:521:19)
+    at Object.<anonymous> (C:\Users\EMMANUEL\Desktop\New folder (8)\src\routes\cartRoutes.js:17:8)
+    at Module._compile (node:internal/modules/cjs/loader:1358:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1416:10)
+    at Module.load (node:internal/modules/cjs/loader:1208:32)
+    at Module._load (node:internal/modules/cjs/loader:1024:12)
+    at Module.require (node:internal/modules/cjs/loader:1233:19)
+    at require (node:internal/modules/helpers:179:18)
+    at Object.<anonymous> (C:\Users\EMMANUEL\Desktop\New folder (8)\src\app.js:15:20)
+2024-12-15 22:31:07 [ERROR]: Error: Cannot find module 'express-validator'
+Require stack:
+- C:\Users\EMMANUEL\Desktop\New folder (8)\src\controllers\cartController.js
+- C:\Users\EMMANUEL\Desktop\New folder (8)\src\routes\cartRoutes.js
+- C:\Users\EMMANUEL\Desktop\New folder (8)\src\app.js
+- C:\Users\EMMANUEL\Desktop\New folder (8)\src\server.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1145:15)
+    at Module._load (node:internal/modules/cjs/loader:986:27)
+    at Module.require (node:internal/modules/cjs/loader:1233:19)
+    at require (node:internal/modules/helpers:179:18)
+    at Object.<anonymous> (C:\Users\EMMANUEL\Desktop\New folder (8)\src\controllers\cartController.js:2:30)
+    at Module._compile (node:internal/modules/cjs/loader:1358:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1416:10)
+    at Module.load (node:internal/modules/cjs/loader:1208:32)
+    at Module._load (node:internal/modules/cjs/loader:1024:12)
+    at Module.require (node:internal/modules/cjs/loader:1233:19)
+2024-12-15 22:34:01 [ERROR]: Error: Cannot find module '../models/Product'
+Require stack:
+- C:\Users\EMMANUEL\Desktop\New folder (8)\src\controllers\cartController.js
+- C:\Users\EMMANUEL\Desktop\New folder (8)\src\routes\cartRoutes.js
+- C:\Users\EMMANUEL\Desktop\New folder (8)\src\app.js
+- C:\Users\EMMANUEL\Desktop\New folder (8)\src\server.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1145:15)
+    at Module._load (node:internal/modules/cjs/loader:986:27)
+    at Module.require (node:internal/modules/cjs/loader:1233:19)
+    at require (node:internal/modules/helpers:179:18)
+    at Object.<anonymous> (C:\Users\EMMANUEL\Desktop\New folder (8)\src\controllers\cartController.js:3:22)
+    at Module._compile (node:internal/modules/cjs/loader:1358:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1416:10)
+    at Module.load (node:internal/modules/cjs/loader:1208:32)
+    at Module._load (node:internal/modules/cjs/loader:1024:12)
+    at Module.require (node:internal/modules/cjs/loader:1233:19)
+2024-12-15 22:34:50 [ERROR]: ReferenceError: check is not defined
+    at Object.<anonymous> (C:\Users\EMMANUEL\Desktop\New folder (8)\src\controllers\cartController.js:11:27)
+    at Module._compile (node:internal/modules/cjs/loader:1358:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1416:10)
+    at Module.load (node:internal/modules/cjs/loader:1208:32)
+    at Module._load (node:internal/modules/cjs/loader:1024:12)
+    at Module.require (node:internal/modules/cjs/loader:1233:19)
+    at require (node:internal/modules/helpers:179:18)
+    at Object.<anonymous> (C:\Users\EMMANUEL\Desktop\New folder (8)\src\routes\cartRoutes.js:3:24)
+    at Module._compile (node:internal/modules/cjs/loader:1358:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1416:10)
+2024-12-18 01:18:20 [ERROR]: Error: Cannot find module '../models/product'
+Require stack:
+- C:\Users\EMMANUEL\Desktop\New folder (8)\src\controllers\cartController.js
+- C:\Users\EMMANUEL\Desktop\New folder (8)\src\controllers\PaymentController.js
+- C:\Users\EMMANUEL\Desktop\New folder (8)\src\controllers\OrderController.js
+- C:\Users\EMMANUEL\Desktop\New folder (8)\src\routes\orderRoutes.js
+- C:\Users\EMMANUEL\Desktop\New folder (8)\src\app.js
+- C:\Users\EMMANUEL\Desktop\New folder (8)\src\server.js
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1145:15)
+    at Module._load (node:internal/modules/cjs/loader:986:27)
+    at Module.require (node:internal/modules/cjs/loader:1233:19)
+    at require (node:internal/modules/helpers:179:18)
+    at Object.<anonymous> (C:\Users\EMMANUEL\Desktop\New folder (8)\src\controllers\cartController.js:2:17)
+    at Module._compile (node:internal/modules/cjs/loader:1358:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1416:10)
+    at Module.load (node:internal/modules/cjs/loader:1208:32)
+    at Module._load (node:internal/modules/cjs/loader:1024:12)
+    at Module.require (node:internal/modules/cjs/loader:1233:19)
+2024-12-18 01:19:22 [ERROR]: ReferenceError: createCart is not defined
+    at Object.<anonymous> (C:\Users\EMMANUEL\Desktop\New folder (8)\src\controllers\cartController.js:272:20)
+    at Module._compile (node:internal/modules/cjs/loader:1358:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1416:10)
+    at Module.load (node:internal/modules/cjs/loader:1208:32)
+    at Module._load (node:internal/modules/cjs/loader:1024:12)
+    at Module.require (node:internal/modules/cjs/loader:1233:19)
+    at require (node:internal/modules/helpers:179:18)
+    at Object.<anonymous> (C:\Users\EMMANUEL\Desktop\New folder (8)\src\controllers\PaymentController.js:9:37)
+    at Module._compile (node:internal/modules/cjs/loader:1358:14)
+    at Module._extensions..js (node:internal/modules/cjs/loader:1416:10)

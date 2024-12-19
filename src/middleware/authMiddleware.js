@@ -1,10 +1,11 @@
+// middlewares/authMiddleware.js
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 
 exports.protect = async (req, res, next) => {
   try {
-    // Check for token in headers
-    const token = req.headers.authorization?.split(' ')[1];
+    // Check for token in Authorization header
+    const token = req.headers.authorization?.split(' ')[1]; // Extract token
     if (!token) {
       return res.status(401).json({
         status: 'fail',
@@ -12,10 +13,10 @@ exports.protect = async (req, res, next) => {
       });
     }
 
-    // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // Verify the token using JWT secret
+    const decoded = jwt.verify(token, process.env.JWT_SECRET); // Replace with your secret
 
-    // Check if user still exists
+    // Check if the user exists in the database
     const currentUser = await User.findById(decoded.id);
     if (!currentUser) {
       return res.status(401).json({
@@ -24,9 +25,9 @@ exports.protect = async (req, res, next) => {
       });
     }
 
-    // Grant access
+    // Add the current user to the request object for use in the controller
     req.user = currentUser;
-    next();
+    next(); // Proceed to the next middleware or route handler
   } catch (err) {
     res.status(401).json({
       status: 'fail',

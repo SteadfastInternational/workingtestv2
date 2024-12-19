@@ -1,42 +1,69 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const connectDB = require("./config/db");
+const cors = require("cors");
+
+// Import Routes
 const productRoutes = require("./routes/productRoutes");
+const orderRoutes = require("./routes/orderRoutes");
+const categoryRoutes = require("./routes/categoryRoutes");
+const addressRoutes = require("./routes/addressRoutes");
+const paymentRoutes = require("./routes/PaymentRoutes");
+const blogRoutes = require("./routes/blogRoutes");
+const authRoutes = require("./routes/authRoutes");
+const adminRoutes = require("./routes/adminRoutes");
+const cartRoutes = require("./routes/cartRoutes");
+const couponRoutes = require('./routes/couponRoutes');
+
+// Middleware
 const errorHandler = require("./middleware/errorMiddleware");
-const OrderRoutes = require('./routes/OrderRoutes');
-const productController = require('./controllers/productController');
-const cors = require('cors'); // Import the CORS package
+const productController = require("./controllers/productController");
 
 dotenv.config();
+
+// Database Connection
 connectDB();
 
 const app = express();
 
-// Configure CORS to allow requests from 'https://www.steadfast.ng'
+// Configure CORS
 const corsOptions = {
-  origin: 'https://www.steadfast.ng',  // Specify the allowed origin
-  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Specify allowed methods
-  allowedHeaders: ['Content-Type', 'Authorization'], // Specify allowed headers
+  origin: process.env.CLIENT_URL || 'https://www.steadfast.ng', // Use environment variable for flexibility
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 };
-
-// Enable CORS with the configured options
 app.use(cors(corsOptions));
 
 // Middleware to parse JSON bodies
 app.use(express.json());
 
-// Log request details for debugging
-app.use((req, res, next) => {
-  console.log(`${req.method} request to ${req.url}`);
-  next();
-});
+// Logging Middleware for Debugging (only in development mode)
+if (process.env.NODE_ENV === "development") {
+  app.use((req, res, next) => {
+    console.log(`${req.method} request to ${req.url}`);
+    next();
+  });
+}
 
 // Routes
-app.use("/api/products", productRoutes);
-app.use('/Orders', OrderRoutes); // Ensure the correct path and method
-app.use('/products/search/:term', productController.searchProducts);
+app.use("/api/products", productRoutes); // Product routes
+app.use("/api/orders", orderRoutes); // Order routes (added `/api` for consistency)
+app.use("/api/products/search/:term", productController.searchProducts); // Product search route
+app.use("/api/categories", categoryRoutes); // Category routes
+app.use("/api/payment", paymentRoutes); // Payment routes
+app.use("/api/address", addressRoutes); // Address routes
+app.use("/api/blogs", blogRoutes); // Blog routes
+app.use("/api/auth", authRoutes); // Authentication routes
+app.use("/api/admin", adminRoutes); // Admin routes
+app.use("/api", cartRoutes); // Cart routes
+app.use('/coupons', couponRoutes); //Coupon Fetching Routes 
+// 404 Error Middleware for Undefined Routes
+app.use((req, res) => {
+  res.status(404).json({ error: `Route ${req.method} ${req.originalUrl} not found` });
+});
 
-// Error handler middleware
+// Error Handler Middleware (must be last)
 app.use(errorHandler);
 
-module.exports = app; // Export the app instance
+// Export App
+module.exports = app;

@@ -1,9 +1,7 @@
 const User = require('../models/user');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
-const crypto = require('crypto');
-const nodemailer = require('nodemailer');
-const { promisify } = require('util');
+const { sendPasswordResetEmail, sendResetSuccessEmail, sendWelcomeEmail } = require('../mailtrap/email'); // Import email sending functions
 
 // Helper: Generate JWT
 const signToken = (id) => {
@@ -30,24 +28,6 @@ const createSendToken = (user, statusCode, res) => {
   });
 };
 
-// Helper: Send emails
-const sendEmail = async (options) => {
-  const transporter = nodemailer.createTransport({
-    service: 'SendGrid',
-    auth: {
-      user: process.env.SENDGRID_USERNAME,
-      pass: process.env.SENDGRID_PASSWORD,
-    },
-  });
-
-  await transporter.sendMail({
-    from: 'noreply@example.com',
-    to: options.email,
-    subject: options.subject,
-    text: options.message,
-  });
-};
-
 // Signup
 exports.signup = async (req, res) => {
   try {
@@ -56,16 +36,12 @@ exports.signup = async (req, res) => {
     // Create user
     const newUser = await User.create({ firstName, lastName, email, password });
 
-    // Send welcome email
-    const welcomeMessage = `Welcome ${firstName} ${lastName}!\n\nThank you for joining our platform.`;
-    await sendEmail({
-      email: newUser.email,
-      subject: 'Welcome to Our Platform!',
-      message: welcomeMessage,
-    });
-
     // Send JWT token to the user
     createSendToken(newUser, 201, res);
+
+    // Send welcome email after successful signup
+    await sendWelcomeEmail(newUser.email, newUser.firstName);
+
   } catch (err) {
     res.status(400).json({
       status: 'fail',
@@ -120,24 +96,23 @@ exports.forgotPassword = async (req, res) => {
       });
     }
 
-    // Generate a new password
-    const newPassword = crypto.randomBytes(6).toString('hex');
-
-    // Update user's password
-    user.password = await bcrypt.hash(newPassword, 12);
-    await user.save({ validateBeforeSave: false });
-
-    // Send new password via email
-    const resetMessage = `Your new password is: ${newPassword}\n\nPlease log in and change your password as soon as possible.`;
-    await sendEmail({
-      email: user.email,
-      subject: 'Your New Password',
-      message: resetMessage,
+    // Generate reset token
+    const resetToken = jwt.sign({ id: user._id }, process.env.JWT_RESET_PASSWORD_SECRET, {
+      expiresIn: process.env.JWT_RESET_PASSWORD_EXPIRES_IN, // 1 hour or custom
     });
+
+    // Store the reset token and expiration time in the user's record
+    user.resetPasswordToken = resetToken;
+    user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+    await user.save();
+
+    // Send reset link via email
+    const resetURL = `${process.env.CLIENT_URL}/auth/reset-password/${resetToken}`;
+    await sendPasswordResetEmail(email, resetURL);
 
     res.status(200).json({
       status: 'success',
-      message: 'A new password has been sent to your email',
+      message: 'Password reset link sent to email',
     });
   } catch (err) {
     res.status(400).json({
@@ -147,42 +122,45 @@ exports.forgotPassword = async (req, res) => {
   }
 };
 
-// Change Password
-exports.changePassword = async (req, res) => {
+// Reset Password
+exports.resetPassword = async (req, res) => {
   try {
-    const { oldPassword, newPassword } = req.body;
+    const { resetToken } = req.params; // Get token from URL
+    const { password, confirmPassword } = req.body;
 
-    // Find user
-    const user = await User.findById(req.user.id).select('+password');
-    if (!user) {
-      return res.status(404).json({
+    // 1. Check if passwords match
+    if (password !== confirmPassword) {
+      return res.status(400).json({
         status: 'fail',
-        message: 'User not found',
+        message: 'Passwords do not match',
       });
     }
 
-    // Check old password
-    if (!(await user.correctPassword(oldPassword, user.password))) {
-      return res.status(401).json({
+    // 2. Verify the reset token and decode it
+    const decoded = jwt.verify(resetToken, process.env.JWT_RESET_PASSWORD_SECRET);
+    const user = await User.findById(decoded.id);
+
+    // 3. Check if the user exists and the reset token has expired
+    if (!user || user.resetPasswordExpires < Date.now()) {
+      return res.status(400).json({
         status: 'fail',
-        message: 'Your current password is incorrect',
+        message: 'Reset token is invalid or has expired',
       });
     }
 
-    // Update password
-    user.password = await bcrypt.hash(newPassword, 12);
+    // 4. Update user's password
+    user.password = await bcrypt.hash(password, 12); // Hash the new password
+    user.resetPasswordToken = undefined; // Remove reset token
+    user.resetPasswordExpires = undefined; // Remove expiration time
     await user.save();
 
-    // Notify user via email
-    const passwordChangedMessage = `Your password has been successfully changed.\n\nIf you didn't request this change, please contact our support team immediately.`;
-    await sendEmail({
-      email: user.email,
-      subject: 'Password Changed Successfully',
-      message: passwordChangedMessage,
-    });
+    // 5. Send the success email
+    await sendResetSuccessEmail(user.email);
 
-    // Send JWT token to the user
-    createSendToken(user, 200, res);
+    res.status(200).json({
+      status: 'success',
+      message: 'Password has been reset successfully',
+    });
   } catch (err) {
     res.status(400).json({
       status: 'fail',

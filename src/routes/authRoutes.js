@@ -1,8 +1,9 @@
 const express = require('express');
-const authController = require('../controllers/authController');
-const { protect } = require('../middleware/authMiddleware');
-
 const router = express.Router();
+const authController = require('../controllers/authController');
+const { protect } = require('../middleware/authMiddleware'); // Auth middleware to protect routes
+
+// Routes for authentication and password management
 
 // Signup route
 router.post('/signup', authController.signup);
@@ -10,10 +11,10 @@ router.post('/signup', authController.signup);
 // Login route
 router.post('/login', authController.login);
 
-// Forgot password route
-router.post('/forgot-password', authController.forgotPassword);
+// Forgot Password route
+router.post('/forgot-password', protect, authController.forgotPassword);
 
-// Change password route (requires user to be logged in)
-router.patch('/change-password', protect, authController.changePassword);
+// Reset Password route
+router.patch('/reset-password/:resetToken', authController.resetPassword);
 
 module.exports = router;

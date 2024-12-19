@@ -1,71 +1,183 @@
+const Joi = require('joi'); 
 const mongoose = require('mongoose');
 
-// Order Item Schema
-const OrderItemSchema = new mongoose.Schema({
-  product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
-  variation: { type: String, required: true }, // Updated to match ProductSchema.variations.id
-  quantity: { type: Number, required: true },
-  price: { type: Number, required: true },
-}, { _id: false }); // Prevents creating a separate _id for each item
-
-// Order Schema
-const OrderSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // Reference to the User
-  cart: { type: mongoose.Schema.Types.ObjectId, ref: "Cart", required: true },
-  paymentStatus: { type: String, enum: ["Pending", "Paid", "Failed"], default: "Pending" },
-  status: { 
-    type: String, 
-    enum: ["Pending", "Processing", "Shipped", "Delivered", "Cancelled", "Refunded"], 
-    default: "Pending" 
+// Order schema definition
+const orderSchema = new mongoose.Schema(
+  {
+    orderId: {
+      type: String,
+      required: true,
+      unique: true, // Ensures order ID is unique
+    },
+    trackingNumber: {
+      type: String,
+      required: true,
+      unique: true, // Ensures tracking number is unique
+    },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User', // References the User model
+      required: true,
+    },
+    items: [
+      {
+        productId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Product', // References the Product model
+          required: true,
+        },
+        quantity: {
+          type: Number,
+          required: true,
+        },
+        price: {
+          type: Number,
+          required: true,
+        },
+        variation: {
+          type: String, // E.g., Size, Color, etc.
+          required: false,
+        },
+      },
+    ],
+    totalPrice: {
+      type: Number,
+      required: true,
+    },
+    address: {
+      type: String,
+      required: true,
+    },
+    paymentReference: {
+      type: String,
+      required: true,
+    },
+    paymentStatus: {
+      type: String,
+      enum: ['Paid', 'Pending', 'Failed'],
+      default: 'Pending',
+    },
+    status: {
+      type: String,
+      enum: ['Processing', 'ProcessedInv', 'In Transit', 'Arrived', 'Delivered', 'Cancelled', 'Refunded'],
+      default: 'Processing',
+    },
+    statusColor: {
+      type: String,
+      required: true,
+      enum: ['#B0B0B0', '#FFFF00', '#fff44f', '#32CD32', '#FF0000', '#808080'], // Added gray for refunded status
+      default: '#B0B0B0', // Default to Ash for Processing
+    },
+    refundedAmount: {
+      type: Number,
+      default: 0, // Tracks the refunded amount
+    },
+    refundStatus: {
+      type: String,
+      enum: ['Not Requested', 'Requested', 'Completed', 'Failed'],
+      default: 'Not Requested',
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now,
+    },
+    updatedAt: {
+      type: Date,
+      default: Date.now,
+    },
   },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now },
-  items: [OrderItemSchema], // Embedded Order Items
-  paymentTransactionId: { type: String }, // To store payment processor transaction ID
-  totalAmount: { type: Number, required: true }, // Total Order amount
+  {
+    timestamps: true, // Automatically tracks createdAt and updatedAt
+  }
+);
+
+// Middleware to update inventory when the order is created
+orderSchema.pre('save', async function (next) {
+  if (this.isNew) {
+    try {
+      // Iterate through the items and deduct the quantity from inventory
+      for (const item of this.items) {
+        const product = await mongoose.model('Product').findById(item.productId);
+        if (product) {
+          product.quantity -= item.quantity; // Deduct ordered quantity
+          await product.save();
+        }
+      }
+      next();
+    } catch (error) {
+      next(error); // If an error occurs, pass it to the next middleware
+    }
+  } else {
+    next();
+  }
 });
 
-// Pre-save hook to handle timestamps
-OrderSchema.pre('save', function(next) {
-  this.updatedAt = Date.now();
+// Static method to create a new order
+orderSchema.statics.createOrder = async function (orderDetails) {
+  try {
+    const order = new this(orderDetails);
+    await order.save();
+    return order;
+  } catch (error) {
+    throw new Error('Error creating order: ' + error.message);
+  }
+};
+
+// Middleware to update the status color based on the status
+orderSchema.pre('save', function (next) {
+  const statusColorMap = {
+    'Processing': '#B0B0B0', // Ash
+    'In Transit': '#FFFF00', // Yellow
+    'Arrived': '#fff44f',    // Custom color for Arrived
+    'Delivered': '#32CD32',  // Green
+    'Cancelled': '#FF0000',  // Red
+    'Refunded': '#808080',   // Gray for refunded
+  };
+
+  this.statusColor = statusColorMap[this.status] || '#B0B0B0'; // Default to Ash for Processing
   next();
 });
 
-// Post-save hook to handle stock updates after payment confirmation
-OrderSchema.post('save', async function(doc, next) {
-  const Product = mongoose.model('Product');
-
-  if (doc.paymentStatus === 'Paid') {
-    try {
-      for (const item of doc.items) {
-        await Product.updateStock(item.product, item.variation, -item.quantity); // Use the ProductSchema static method
-      }
-      next();
-    } catch (err) {
-      next(err);
+// Method to request a refund
+orderSchema.methods.requestRefund = async function (refundAmount) {
+  try {
+    if (this.status === 'Delivered' || this.status === 'Processing') {
+      this.refundStatus = 'Requested';
+      this.refundedAmount = refundAmount;
+      this.status = 'Refunded'; // Change order status to refunded
+      await this.save();
+      return { message: 'Refund requested successfully' };
+    } else {
+      throw new Error('Refund can only be requested for orders in Delivered or Processing status.');
     }
-  } else {
-    next();
+  } catch (error) {
+    throw new Error('Error requesting refund: ' + error.message);
   }
+};
+
+// Method to mark refund as completed
+orderSchema.methods.completeRefund = async function () {
+  try {
+    if (this.refundStatus === 'Requested') {
+      this.refundStatus = 'Completed';
+      await this.save();
+      return { message: 'Refund completed successfully' };
+    } else {
+      throw new Error('Refund must first be requested.');
+    }
+  } catch (error) {
+    throw new Error('Error completing refund: ' + error.message);
+  }
+};
+
+// Middleware to update the status color based on the refund status
+orderSchema.pre('save', function (next) {
+  if (this.refundStatus === 'Completed') {
+    this.statusColor = '#808080'; // Gray for refunded orders
+  }
+  next();
 });
 
-// Post-remove hook to handle stock return on cancellation or refunds
-OrderSchema.post('remove', async function(doc, next) {
-  const Product = mongoose.model('Product');
+const OrderModel = mongoose.model('Order', orderSchema);
 
-  if (doc.status === 'Cancelled' || doc.status === 'Refunded') {
-    try {
-      for (const item of doc.items) {
-        await Product.updateStock(item.product, item.variation, item.quantity); // Use the ProductSchema static method
-      }
-      next();
-    } catch (err) {
-      next(err);
-    }
-  } else {
-    next();
-  }
-});
-
-// Model Export
-module.exports = mongoose.model('Order', OrderSchema);
+module.exports = OrderModel;

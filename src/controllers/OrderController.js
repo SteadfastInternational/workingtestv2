@@ -1,154 +1,242 @@
+const OrderModel = require('../models/Order');
+const CartModel = require('../models/cart');
+const { sendEmail } = require('../utils/emailUtils'); // Assuming utility exists
 const mongoose = require('mongoose');
-const Order = require('../models/Order');
-const Cart = require('../models/cart');
-const Paystack = require('paystack-node');
-const Bull = require('bull');
-const User = require('../models/user');
-const sendEmail = require('../services/emailService'); // Import the email service
+const logger = require('../utils/logger'); // Assuming a logger utility exists
+const paymentController = require('./PaymentController'); // Assuming your PaymentController is in this path
 
-// Initialize Paystack with your secret key
-const paystack = new Paystack('your-paystack-secret-key');
+class OrderController {
+  /**
+   * Create an order from a cart
+   * @param {String} cartId - ID of the cart
+   * @param {String} userId - ID of the user
+   * @returns {Object} - Created order
+   */
+  static async createOrder(cartId, userId) {
+    const session = await mongoose.startSession(); // Start a session for transactions
+    session.startTransaction();
 
-// Initialize a Bull queue to handle async jobs
-const OrderQueue = new Bull('OrderQueue', 'redis://127.0.0.1:6379');
+    try {
+      // Step 1: Fetch the cart and validate
+      const cart = await CartModel.findOne({ _id: cartId, userId }).session(session);
+      if (!cart) {
+        logger.error(
+          `User ${userId} failed to create order. Cart not found or does not belong to the user. Cart ID: ${cartId}`
+        );
+        throw new Error('Cart not found or does not belong to the user.');
+      }
 
-// Create a new Order and redirect to Paystack for payment
-exports.createOrder = async (req, res) => {
-  try {
-    const { cartId } = req.body;
-    const userId = req.user.id;  // Assuming user is authenticated
+      if (cart.status === 'Completed') {
+        logger.error(
+          `User ${userId} attempted to create an order with an already completed cart. Cart ID: ${cartId}`
+        );
+        throw new Error('Order has already been created for this cart.');
+      }
 
-    // Fetch the cart details
-    const cart = await Cart.findById(cartId).populate('items.product').populate('items.variation');
-    if (!cart) {
-      return res.status(404).json({ message: 'Cart not found' });
+      // Step 2: Generate a unique tracking ID for the order
+      const trackingId = `ORDER-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+
+      // Step 3: Use the formatted address from the cart
+      const formattedAddress = cart.formattedAddress || cart.address; // Fallback to cart.address if formattedAddress is unavailable
+
+      // Step 4: Create the order
+      const order = new OrderModel({
+        cartId: cart._id,
+        userId: cart.userId,
+        trackingId,
+        orderStatus: 'Processed', // Initial status
+        paymentReference: cart.paymentReference,
+        totalPrice: cart.totalPrice,
+        address: formattedAddress,
+        items: cart.items,
+        createdAt: new Date(),
+      });
+
+      await order.save({ session });
+
+      // Step 5: Mark the cart as completed
+      cart.status = 'Completed';
+      await cart.save({ session });
+
+      // Step 6: Notify user via email (with retry logic)
+      let emailSent = false;
+      let retries = 3;
+      while (retries > 0 && !emailSent) {
+        try {
+          const emailResponse = await sendEmail({
+            to: cart.userId.email,
+            subject: 'Your Order Has Been Processed',
+            body: `Dear ${cart.firstName} ${cart.lastName},\n\nYour order has been successfully processed.\n\nTracking ID: ${trackingId}\n\nThank you for shopping with us.`,
+          });
+
+          if (emailResponse.success) {
+            logger.info(
+              `Order notification email sent to ${cart.userId.email} with Tracking ID ${trackingId}`
+            );
+            emailSent = true;
+          } else {
+            throw new Error(`Email service failed for user ${cart.userId.email}.`);
+          }
+        } catch (emailError) {
+          retries--;
+          logger.error(
+            `Email sending failed on attempt ${4 - retries} for user ${cart.userId.email}: ${emailError.message}`
+          );
+          if (retries === 0) {
+            // If all retries fail, log and proceed with order creation
+            logger.error(
+              `Failed to send order notification email to ${cart.userId.email} after 3 attempts.`
+            );
+          }
+        }
+      }
+
+      await session.commitTransaction(); // Commit transaction
+      logger.info(`Order created for user ${userId} with Tracking ID: ${trackingId}`);
+      return order;
+    } catch (error) {
+      logger.error(`Error creating order for user ${userId}: ${error.message}`);
+      await session.abortTransaction(); // Rollback on failure
+      throw new Error('Failed to create order. Please try again.');
+    } finally {
+      session.endSession(); // End the session
     }
-
-    // Calculate total Order amount
-    let totalAmount = 0;
-    const items = cart.items.map(item => {
-      const itemTotal = (item.variation?.price || item.product.price) * item.quantity;
-      totalAmount += itemTotal;
-      return {
-        product: item.product._id,
-        variation: item.variation?._id,
-        quantity: item.quantity,
-        price: itemTotal,
-      };
-    });
-
-    // Create an Order
-    const Order = new Order({
-      cart: cartId,
-      items,
-      totalAmount,
-      status: 'Pending',
-      user: userId,
-    });
-
-    // Save the Order
-    await Order.save();
-
-    // Send email to user about the Order
-    const emailText = `Thank you for your Order! Your Order ID is ${Order._id}. Please complete your payment to proceed.`;
-    const emailHtml = `<p>Thank you for your Order! Your Order ID is <strong>${Order._id}</strong>. Please complete your payment to proceed.</p>`;
-    await sendEmail(req.user.email, 'Order Created - Complete Your Payment', emailText, emailHtml);
-
-    // Redirect user to Paystack payment page
-    const paymentData = {
-      amount: totalAmount * 100, // Paystack expects the amount in kobo (1 kobo = 0.01 Naira)
-      email: req.user.email,
-      callback_url: `${process.env.BASE_URL}/payment/callback`,
-      metadata: { OrderId: Order._id },  // Include Order ID in metadata for reference
-    };
-
-    const response = await paystack.transaction.initialize(paymentData);
-    if (response.status) {
-      Order.paymentTransactionId = response.data.reference;
-      await Order.save();
-
-      return res.json({ paymentUrl: response.data.authorization_url });
-    } else {
-      return res.status(500).json({ message: 'Payment initiation failed', error: response.message });
-    }
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: 'Error creating Order', error: error.message });
   }
-};
 
-// Payment Callback to process Order after Paystack payment success
-exports.paymentCallback = async (req, res) => {
-  try {
-    const { reference } = req.query;
-    if (!reference) {
-      return res.status(400).json({ message: 'Missing payment reference' });
+  /**
+   * Update the status of an order (Admin function)
+   * @param {String} orderId - ID of the order
+   * @param {String} newStatus - New status for the order
+   * @returns {Object} - Updated order
+   */
+  static async updateOrderStatus(orderId, newStatus) {
+    const validStatuses = ['On Transit', 'Arrived', 'Delivered', 'Cancelled'];
+    if (!validStatuses.includes(newStatus)) {
+      logger.error(`Invalid status provided for order ${orderId}. Status provided: ${newStatus}`);
+      throw new Error('Invalid order status provided.');
     }
 
-    // Verify the transaction with Paystack
-    const verifyResponse = await paystack.transaction.verify(reference);
-    if (!verifyResponse.status) {
-      console.error(`Payment verification failed for reference: ${reference}`);
-      return res.status(400).json({ message: 'Payment verification failed', error: verifyResponse.message });
+    try {
+      // Fetch and update the order
+      const order = await OrderModel.findById(orderId);
+      if (!order) {
+        logger.error(`Order with ID ${orderId} not found.`);
+        throw new Error('Order not found.');
+      }
+
+      order.orderStatus = newStatus;
+      order.updatedAt = new Date(); // Update timestamp
+      await order.save();
+
+      // Optionally notify user of status change
+      await sendEmail({
+        to: order.userId.email,
+        subject: `Your Order Status Has Been Updated`,
+        body: `Dear ${order.firstName} ${order.lastName},\n\nYour order status has been updated to: ${newStatus}.\n\nTracking ID: ${order.trackingId}`,
+      });
+
+      logger.info(`Order status for order ${orderId} updated to ${newStatus}`);
+      return order;
+    } catch (error) {
+      logger.error(`Error updating order status for order ${orderId}: ${error.message}`);
+      throw new Error('Failed to update order status.');
     }
-
-    if (verifyResponse.data.status !== 'success') {
-      console.error(`Payment unsuccessful for reference: ${reference}`);
-      return res.status(400).json({ message: 'Payment unsuccessful', error: 'Payment was not successful.' });
-    }
-
-    // Find the Order using the transaction reference (stored in metadata)
-    const Order = await Order.findOne({ paymentTransactionId: reference }).populate('cart');
-    if (!Order) {
-      return res.status(404).json({ message: 'Order not found', error: 'Order with this transaction reference does not exist.' });
-    }
-
-    // Mark the Order as paid
-    Order.paymentStatus = 'Paid';
-    Order.status = 'Processing'; // Change status to processing once paid
-    await Order.save();
-
-    // Send email to user confirming payment success
-    const emailText = `Your payment for Order ${Order._id} has been successfully processed. Your Order is now being processed.`;
-    const emailHtml = `<p>Your payment for Order <strong>${Order._id}</strong> has been successfully processed. Your Order is now being processed.</p>`;
-    await sendEmail(req.user.email, 'Payment Successful - Order Processing', emailText, emailHtml);
-
-    // Process stock updates in background job
-    await OrderQueue.add({ OrderId: Order._id });
-
-    return res.json({ message: 'Payment successful', Order });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: 'Error processing payment', error: error.message });
   }
-};
 
-// Async job to handle stock updates and further processing (like shipping)
-OrderQueue.process(async (job, done) => {
-  try {
-    const Order = await Order.findById(job.data.OrderId).populate('items.product').populate('items.variation');
-    if (!Order) {
-      return done(new Error('Order not found'));
+  /**
+   * Cancel an order and revert the cart status
+   * @param {String} orderId - ID of the order
+   * @returns {Object} - Updated order and cart
+   */
+  static async cancelOrder(orderId) {
+    const session = await mongoose.startSession(); // Start a session for transactions
+    session.startTransaction();
+
+    try {
+      // Step 1: Fetch the order and validate
+      const order = await OrderModel.findById(orderId).session(session);
+      if (!order) {
+        logger.error(`Order with ID ${orderId} not found.`);
+        throw new Error('Order not found.');
+      }
+
+      // Step 2: Check if the order is already canceled or completed
+      if (order.orderStatus === 'Cancelled') {
+        logger.error(`Order with ID ${orderId} is already canceled.`);
+        throw new Error('Order is already canceled.');
+      }
+
+      // Step 3: Fetch the associated cart and revert its status
+      const cart = await CartModel.findOne({ _id: order.cartId }).session(session);
+      if (!cart) {
+        logger.error(`Cart with ID ${order.cartId} not found.`);
+        throw new Error('Cart not found.');
+      }
+
+      cart.status = 'Pending'; // Revert cart status
+      await cart.save({ session });
+
+      // Step 4: Update the order status to 'Cancelled'
+      order.orderStatus = 'Cancelled';
+      await order.save({ session });
+
+      // Step 5: Process the refund using the existing payment controller (assumed to be implemented)
+      await paymentController.refundPayment(order.paymentReference); // Refund via the existing payment controller
+
+      await session.commitTransaction(); // Commit transaction
+      logger.info(`Order with ID ${orderId} canceled successfully.`);
+      return { order, cart };
+    } catch (error) {
+      logger.error(`Error canceling order ${orderId}: ${error.message}`);
+      await session.abortTransaction(); // Rollback on failure
+      throw new Error('Failed to cancel order. Please try again.');
+    } finally {
+      session.endSession(); // End the session
     }
-
-    // Update stock for each product item
-    for (const item of Order.items) {
-      const product = await mongoose.model('Product').findById(item.product);
-      if (!product) throw new Error('Product not found');
-
-      const variation = product.variations.find(v => v._id.toString() === item.variation.toString());
-      if (!variation) throw new Error('Variation not found');
-
-      const newQuantity = variation.quantity - item.quantity;
-      if (newQuantity < 0) throw new Error(`Not enough stock for product ${product.name}`);
-
-      variation.quantity = newQuantity;
-      await variation.save(); // Update stock
-    }
-
-    done();
-  } catch (error) {
-    console.error(error);
-    done(error);
   }
-});
+
+  /**
+   * Fetch all orders
+   * @returns {Array} - List of all orders
+   */
+  static async getAllOrders() {
+    try {
+      // Fetch orders with limited populated fields for optimization
+      const orders = await OrderModel.find()
+        .populate('userId', 'firstName lastName email') // Populating only essential user fields
+        .populate('items.productId', 'name price'); // Populating only necessary product details
+
+      logger.info('Fetched all orders successfully');
+      return orders;
+    } catch (error) {
+      logger.error('Error fetching orders: ' + error.message);
+      throw new Error('Failed to fetch orders.');
+    }
+  }
+
+  /**
+   * Get order details by ID
+   * @param {String} orderId - ID of the order
+   * @returns {Object} - Order details
+   */
+  static async getOrderById(orderId) {
+    try {
+      const order = await OrderModel.findById(orderId)
+        .populate('userId', 'firstName lastName email') // Populating only essential user fields
+        .populate('items.productId', 'name price'); // Populating only necessary product details
+
+      if (!order) {
+        logger.error(`Order with ID ${orderId} not found.`);
+        throw new Error('Order not found.');
+      }
+
+      logger.info(`Fetched order details for order ID ${orderId}`);
+      return order;
+    } catch (error) {
+      logger.error(`Error fetching order with ID ${orderId}: ${error.message}`);
+      throw new Error('Failed to fetch order details.');
+    }
+  }
+}
+
+module.exports = OrderController;
