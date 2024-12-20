@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { initiatePayment, handleWebhook, processRefund } = require('../controllers/PaymentController');
 const isAdmin = require('../middleware/adminMiddleware');
+const logger = require('../utils/logger');
 
 // Route to initiate payment
 router.post('/paystack/initiate', async (req, res) => {
