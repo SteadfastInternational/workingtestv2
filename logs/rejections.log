@@ -1,0 +1,21 @@
+2024-12-19 23:29:44 [ERROR]: Error [ERR_HTTP_HEADERS_SENT]: Cannot set headers after they are sent to the client
+    at ServerResponse.setHeader (node:_http_outgoing:699:11)
+    at ServerResponse.header (C:\Users\HP\Documents\GitHub\workingtest\node_modules\express\lib\response.js:794:10)
+    at ServerResponse.send (C:\Users\HP\Documents\GitHub\workingtest\node_modules\express\lib\response.js:174:12)
+    at ServerResponse.json (C:\Users\HP\Documents\GitHub\workingtest\node_modules\express\lib\response.js:278:15)
+    at C:\Users\HP\Documents\GitHub\workingtest\src\routes\PaymentRoutes.js:30:21
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+2024-12-19 23:31:12 [ERROR]: Error [ERR_HTTP_HEADERS_SENT]: Cannot set headers after they are sent to the client
+    at ServerResponse.setHeader (node:_http_outgoing:699:11)
+    at ServerResponse.header (C:\Users\HP\Documents\GitHub\workingtest\node_modules\express\lib\response.js:794:10)
+    at ServerResponse.send (C:\Users\HP\Documents\GitHub\workingtest\node_modules\express\lib\response.js:174:12)
+    at ServerResponse.json (C:\Users\HP\Documents\GitHub\workingtest\node_modules\express\lib\response.js:278:15)
+    at C:\Users\HP\Documents\GitHub\workingtest\src\routes\PaymentRoutes.js:30:21
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+2024-12-19 23:32:38 [ERROR]: Error [ERR_HTTP_HEADERS_SENT]: Cannot set headers after they are sent to the client
+    at ServerResponse.setHeader (node:_http_outgoing:699:11)
+    at ServerResponse.header (C:\Users\HP\Documents\GitHub\workingtest\node_modules\express\lib\response.js:794:10)
+    at ServerResponse.send (C:\Users\HP\Documents\GitHub\workingtest\node_modules\express\lib\response.js:174:12)
+    at ServerResponse.json (C:\Users\HP\Documents\GitHub\workingtest\node_modules\express\lib\response.js:278:15)
+    at C:\Users\HP\Documents\GitHub\workingtest\src\routes\PaymentRoutes.js:30:21
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)

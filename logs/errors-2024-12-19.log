@@ -1,2 +1,58 @@
 2024-12-19 21:11:47 [ERROR]: Error fetching coupons from external API: Invalid response from coupon API
 2024-12-19 21:20:32 [ERROR]: Error saving new coupons: Coupon validation failed: discountPercentage: Path `discountPercentage` is required.
+2024-12-19 22:53:04 [ERROR]: Error creating cart: Product with ID or Name SweetCup-40g not found.
+2024-12-19 22:54:12 [ERROR]: Error creating cart: Product with ID or Name [Sample] Chemex Coffeemaker 3 Cup  consetetur sadipscing elitr-12oz not found.
+2024-12-19 22:55:34 [ERROR]: Error creating cart: Variation "Chocolate" not found for product "[Sample] Chemex Coffeemaker 3 Cup  consetetur sadipscing elitr".
+2024-12-19 22:55:51 [ERROR]: Error creating cart: Product with ID or Name CandyBag not found.
+2024-12-19 22:56:06 [ERROR]: Error creating cart: Coupon not found.
+2024-12-19 22:57:12 [ERROR]: ValidationError: Cart validation failed: items.0.productId: Path `productId` is required.
+    at Document.invalidate (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\lib\document.js:3318:32)
+    at Subdocument.invalidate (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\lib\types\subdocument.js:229:12)
+    at C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\lib\document.js:3079:17
+    at C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\lib\schemaType.js:1388:9
+    at process.processTicksAndRejections (node:internal/process/task_queues:85:11)
+2024-12-19 22:58:33 [ERROR]: TypeError: logError is not a function
+    at initiatePayment (C:\Users\HP\Documents\GitHub\workingtest\src\controllers\PaymentController.js:50:5)
+    at createCart (C:\Users\HP\Documents\GitHub\workingtest\src\controllers\cartController.js:124:30)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+2024-12-19 23:03:01 [ERROR]: MongoServerError: E11000 duplicate key error collection: test.carts index: items.cartId_1 dup key: { items.cartId: null }
+    at InsertOneOperation.execute (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\operations\insert.js:51:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async tryOperation (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\operations\execute_operation.js:199:20)
+    at async executeOperation (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\operations\execute_operation.js:69:16)
+    at async Collection.insertOne (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\collection.js:154:16)
+2024-12-19 23:05:31 [ERROR]: MongoServerError: E11000 duplicate key error collection: test.carts index: items.cartId_1 dup key: { items.cartId: null }
+    at InsertOneOperation.execute (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\operations\insert.js:51:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async tryOperation (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\operations\execute_operation.js:199:20)
+    at async executeOperation (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\operations\execute_operation.js:69:16)
+    at async Collection.insertOne (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\collection.js:154:16)
+2024-12-19 23:09:58 [ERROR]: MongoServerError: E11000 duplicate key error collection: test.carts index: items.cartId_1 dup key: { items.cartId: null }
+    at InsertOneOperation.execute (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\operations\insert.js:51:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async tryOperation (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\operations\execute_operation.js:199:20)
+    at async executeOperation (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\operations\execute_operation.js:69:16)
+    at async Collection.insertOne (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\collection.js:154:16)
+2024-12-19 23:13:13 [ERROR]: AxiosError: Request failed with status code 401
+    at settle (C:\Users\HP\Documents\GitHub\workingtest\node_modules\axios\dist\node\axios.cjs:2026:12)
+    at IncomingMessage.handleStreamEnd (C:\Users\HP\Documents\GitHub\workingtest\node_modules\axios\dist\node\axios.cjs:3142:11)
+    at IncomingMessage.emit (node:events:536:35)
+    at endReadableNT (node:internal/streams/readable:1698:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+    at Axios.request (C:\Users\HP\Documents\GitHub\workingtest\node_modules\axios\dist\node\axios.cjs:4252:41)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async initiatePayment (C:\Users\HP\Documents\GitHub\workingtest\src\controllers\PaymentController.js:33:22)
+    at async createCart (C:\Users\HP\Documents\GitHub\workingtest\src\controllers\cartController.js:123:24)
+2024-12-19 23:13:13 [ERROR]: Error: Unable to initiate payment. Please try again.
+    at initiatePayment (C:\Users\HP\Documents\GitHub\workingtest\src\controllers\PaymentController.js:48:11)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async createCart (C:\Users\HP\Documents\GitHub\workingtest\src\controllers\cartController.js:123:24)
+2024-12-19 23:16:48 [ERROR]: MongoServerError: E11000 duplicate key error collection: test.carts index: items.cartId_1 dup key: { items.cartId: null }
+    at InsertOneOperation.execute (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\operations\insert.js:51:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async tryOperation (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\operations\execute_operation.js:199:20)
+    at async executeOperation (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\operations\execute_operation.js:69:16)
+    at async Collection.insertOne (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\collection.js:154:16)
+2024-12-19 23:29:44 [ERROR]: Webhook signature mismatch
+2024-12-19 23:31:12 [ERROR]: Webhook signature mismatch
+2024-12-19 23:32:38 [ERROR]: Webhook signature mismatch

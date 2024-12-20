@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { v4: uuidv4 } = require('uuid');
 
 const cartSchema = new mongoose.Schema(
   {
@@ -11,19 +12,11 @@ const cartSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
+      default: () => uuidv4(), // Generate unique cartId
     },
-    userFirstName: {
-      type: String,
-      required: true,
-    },
-    userLastName: {
-      type: String,
-      required: true,
-    },
-    email: {
-      type: String,
-      required: true, 
-    },
+    userFirstName: { type: String, required: true },
+    userLastName: { type: String, required: true },
+    email: { type: String, required: true },
     paymentStatus: {
       type: String,
       enum: ['Pending', 'Completed', 'Failed', 'Refunded'],
@@ -34,12 +27,12 @@ const cartSchema = new mongoose.Schema(
         productId: {
           type: mongoose.Schema.Types.ObjectId,
           ref: 'Product',
-          required: true,
+          required: false,
         },
         variationId: {
           type: mongoose.Schema.Types.ObjectId,
           ref: 'Variation',
-          default: null, // Null if the product doesn't have variations
+          default: null,
         },
         quantity: {
           type: Number,
@@ -60,7 +53,7 @@ const cartSchema = new mongoose.Schema(
         },
         variationOptionTitle: {
           type: String,
-          default: null, // Null if no variation
+          default: null,
         },
       },
     ],
@@ -71,15 +64,15 @@ const cartSchema = new mongoose.Schema(
     coupon: {
       code: {
         type: String,
-        default: null, // Store coupon code if applied
+        default: null,
       },
       discountPercentage: {
         type: Number,
-        default: 0, // Discount applied from the coupon
+        default: 0,
       },
       appliedAt: {
         type: Date,
-        default: null, // Date when the coupon was applied
+        default: null,
       },
     },
     status: {
@@ -89,29 +82,39 @@ const cartSchema = new mongoose.Schema(
     },
     address: {
       type: String,
-      default: null, // Address will be fetched from User Address model
+      default: null,
     },
   },
-  { timestamps: true } // Automatically includes createdAt and updatedAt
+  { timestamps: true }
 );
 
-// Middleware to fetch user's formatted address before saving the cart
+// Middleware to ensure unique cartId before saving
 cartSchema.pre('save', async function (next) {
   if (this.isNew) {
     try {
-      // Fetch the user's address using userId
+      let isUnique = false;
+
+      // Ensure unique cartId
+      while (!isUnique) {
+        const potentialCartId = uuidv4();
+        const existingCart = await mongoose.model('Cart').findOne({ cartId: potentialCartId });
+
+        if (!existingCart) {
+          this.cartId = potentialCartId;
+          isUnique = true;
+        }
+      }
+
+      // Fetch the user's address
       const Address = mongoose.model('Address');
       const address = await Address.findOne({ userId: this.userId });
 
-      if (address) {
-        this.address = address.formattedAddress;
-      } else {
-        this.address = 'Address not found'; // Handle the case where no address is found
-      }
+      this.address = address ? address.formattedAddress : 'Address not found';
 
       next();
     } catch (error) {
-      next(error);
+      console.error('Error in cart pre-save middleware:', error.message);
+      next(new Error('Failed to save cart.'));
     }
   } else {
     next();

@@ -1,0 +1,24 @@
+2024-12-20 05:26:57 [ERROR]: ValidationError: Cart validation failed: items.0.price: Path `price` is required.
+    at Document.invalidate (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\lib\document.js:3318:32)
+    at Subdocument.invalidate (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\lib\types\subdocument.js:229:12)
+    at C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\lib\document.js:3079:17
+    at C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\lib\schemaType.js:1388:9
+    at process.processTicksAndRejections (node:internal/process/task_queues:85:11)
+2024-12-20 05:30:45 [ERROR]: MongoServerError: E11000 duplicate key error collection: test.carts index: items.cartId_1 dup key: { items.cartId: null }
+    at InsertOneOperation.execute (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\operations\insert.js:51:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async tryOperation (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\operations\execute_operation.js:199:20)
+    at async executeOperation (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\operations\execute_operation.js:69:16)
+    at async Collection.insertOne (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\collection.js:154:16)
+2024-12-20 05:37:27 [ERROR]: MongoServerError: E11000 duplicate key error collection: test.carts index: items.cartId_1 dup key: { items.cartId: null }
+    at InsertOneOperation.execute (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\operations\insert.js:51:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async tryOperation (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\operations\execute_operation.js:199:20)
+    at async executeOperation (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\operations\execute_operation.js:69:16)
+    at async Collection.insertOne (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\collection.js:154:16)
+2024-12-20 05:43:35 [ERROR]: MongoServerError: E11000 duplicate key error collection: test.carts index: items.cartId_1 dup key: { items.cartId: null }
+    at InsertOneOperation.execute (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\operations\insert.js:51:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async tryOperation (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\operations\execute_operation.js:199:20)
+    at async executeOperation (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\operations\execute_operation.js:69:16)
+    at async Collection.insertOne (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\collection.js:154:16)

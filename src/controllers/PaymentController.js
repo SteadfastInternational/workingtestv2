@@ -4,7 +4,7 @@ const CartModel = require('../models/cart');
 const ProductModel = require('../models/products');
 const OrderController = require('./OrderController');
 const { sendSuccessEmail, sendFailureEmail } = require('../mailtrap/email');
-const { logError, logInfo } = require('../utils/logger');
+const logger = require('../utils/logger');
 const generateInvoiceHtml = require('../templates/invoiceTemplate');
 const { updateStockAfterPayment } = require('./cartV2Controller'); // Import the stock update function
 
@@ -25,29 +25,26 @@ if (!PAYSTACK_SECRET_KEY || !PAYSTACK_WEBHOOK_SECRET) {
  * @param {string} formattedAddress - Formatted address from the cart.
  * @returns {string} Payment gateway redirection URL.
  */
+
 const initiatePayment = async (cartId, totalPrice, email, userName, formattedAddress) => {
   try {
-    logInfo(`Initiating payment for ${userName}. CartID: ${cartId}, Amount: ₦${totalPrice}, Email: ${email}`);
+    logger.info(`Initiating payment for ${userName}. CartID: ${cartId}, Amount: ₦${totalPrice}, Email: ${email}`);
 
     const response = await axios.post(
       'https://api.paystack.co/transaction/initialize',
       {
         email,
-        amount: totalPrice * 100, // Convert Naira to Kobo
+        amount: totalPrice * 100,
         metadata: { cartId, formattedAddress },
       },
       { headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` } }
     );
 
-    if (!response?.data?.data?.authorization_url) {
-      throw new Error('Failed to generate payment URL from Paystack');
-    }
-
     const paymentUrl = response.data.data.authorization_url;
-    logInfo(`Payment URL generated successfully for ${userName}: ${paymentUrl}`);
+    logger.info(`Payment URL generated successfully for ${userName}: ${paymentUrl}`);
     return paymentUrl;
   } catch (error) {
-    logError(`Payment initiation failed for CartID: ${cartId} - User: ${userName}`, error);
+    logger.error(`Payment initiation failed for CartID: ${cartId} - User: ${userName}`, error);
     throw new Error('Unable to initiate payment. Please try again.');
   }
 };
@@ -58,29 +55,46 @@ const initiatePayment = async (cartId, totalPrice, email, userName, formattedAdd
  * @param {object} req - HTTP request object.
  * @param {object} res - HTTP response object.
  */
+
+
 const handleWebhook = async (req, res) => {
   try {
     const signature = req.headers['x-paystack-signature'];
     if (!isValidSignature(req.body, signature)) {
-      logError('Webhook signature mismatch');
-      return res.status(401).send('Unauthorized');
+      logger.error('Webhook signature mismatch');
+      return res.status(401).send('Unauthorized'); // Early return to prevent further execution
     }
 
     const event = req.body;
     const userName = `${event?.data?.metadata?.firstName || 'Unknown'} ${event?.data?.metadata?.lastName || 'User'}`;
     const userEmail = event?.data?.metadata?.email || 'unknown@example.com';
 
-    logInfo(`Received webhook event from ${userName}: ${event.event}`);
+    logger.info(`Received webhook event from ${userName}: ${event.event}`);
 
-    if (event?.event === 'charge.success') {
-      logInfo(`Processing successful payment for ${userName} with reference: ${event.data.reference}`);
-      await processPaymentSuccess(event.data, userEmail);
+    // Handle different event types
+    switch (event?.event) {
+      case 'charge.success':
+        logger.info(`Processing successful payment for ${userName} with reference: ${event.data.reference}`);
+        await processPaymentSuccess(event.data, userEmail);
+        break;
+      case 'charge.failed':
+        logger.warn(`Payment failed for ${userName} with reference: ${event.data.reference}`);
+        // Handle payment failure logic
+        break;
+      case 'charge.pending':
+        logger.info(`Payment pending for ${userName} with reference: ${event.data.reference}`);
+        // Handle pending payment logic
+        break;
+      default:
+        logger.warn(`Received unhandled event: ${event.event}`);
     }
 
-    res.sendStatus(200); // Respond to Paystack webhook
+    return res.sendStatus(200); // Only send response here after processing is done
   } catch (error) {
-    logError('Error processing webhook', error);
-    res.status(500).send('Internal Server Error');
+    logger.error('Error processing webhook', error);
+    if (!res.headersSent) { // Check if headers have been sent already
+      return res.status(500).send('Internal Server Error'); // Only send response if not sent already
+    }
   }
 };
 
@@ -92,11 +106,12 @@ const handleWebhook = async (req, res) => {
  */
 const isValidSignature = (body, signature) => {
   const hash = crypto
-    .createHmac('sha512', PAYSTACK_WEBHOOK_SECRET)
+    .createHmac('sha512', process.env.PAYSTACK_WEBHOOK_SECRET) // Use environment variable for security
     .update(JSON.stringify(body))
     .digest('hex');
   return hash === signature;
 };
+
 
 /**
  * Processes successful payment event automatically.

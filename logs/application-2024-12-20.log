@@ -1,0 +1,38 @@
+2024-12-20 05:26:57 [ERROR]: ValidationError: Cart validation failed: items.0.price: Path `price` is required.
+    at Document.invalidate (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\lib\document.js:3318:32)
+    at Subdocument.invalidate (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\lib\types\subdocument.js:229:12)
+    at C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\lib\document.js:3079:17
+    at C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\lib\schemaType.js:1388:9
+    at process.processTicksAndRejections (node:internal/process/task_queues:85:11)
+2024-12-20 05:28:38 [INFO]: Initiating payment for Miracle Emmanuel. CartID: 46dc8217-75f3-4232-952a-78ff3de0cfc0, Amount: ₦69.3, Email: officialmico500@gmail.com
+2024-12-20 05:28:38 [INFO]: Payment URL generated successfully for Miracle Emmanuel: https://checkout.paystack.com/alq5ak63lq0858a
+2024-12-20 05:30:45 [ERROR]: MongoServerError: E11000 duplicate key error collection: test.carts index: items.cartId_1 dup key: { items.cartId: null }
+    at InsertOneOperation.execute (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\operations\insert.js:51:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async tryOperation (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\operations\execute_operation.js:199:20)
+    at async executeOperation (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\operations\execute_operation.js:69:16)
+    at async Collection.insertOne (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\collection.js:154:16)
+2024-12-20 05:37:20 [INFO]: Initiating payment for Miracle Emmanuel. CartID: bd404626-ca63-49c1-bf26-6ea3f9a14720, Amount: ₦69.3, Email: officialmico500@gmail.com
+2024-12-20 05:37:21 [INFO]: Payment URL generated successfully for Miracle Emmanuel: https://checkout.paystack.com/pw00huow106ax35
+2024-12-20 05:37:27 [ERROR]: MongoServerError: E11000 duplicate key error collection: test.carts index: items.cartId_1 dup key: { items.cartId: null }
+    at InsertOneOperation.execute (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\operations\insert.js:51:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async tryOperation (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\operations\execute_operation.js:199:20)
+    at async executeOperation (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\operations\execute_operation.js:69:16)
+    at async Collection.insertOne (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\collection.js:154:16)
+2024-12-20 05:42:54 [INFO]: Initiating payment for Miracle Emmanuel. CartID: bc1a9d98-7a6f-47a5-80d5-fbe51771c032, Amount: ₦69.3, Email: officialmico500@gmail.com
+2024-12-20 05:42:55 [INFO]: Payment URL generated successfully for Miracle Emmanuel: https://checkout.paystack.com/o6l37l05hok8gea
+2024-12-20 05:43:35 [ERROR]: MongoServerError: E11000 duplicate key error collection: test.carts index: items.cartId_1 dup key: { items.cartId: null }
+    at InsertOneOperation.execute (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\operations\insert.js:51:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async tryOperation (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\operations\execute_operation.js:199:20)
+    at async executeOperation (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\operations\execute_operation.js:69:16)
+    at async Collection.insertOne (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\collection.js:154:16)
+2024-12-20 05:44:38 [INFO]: Initiating payment for Miracle Emmanuel. CartID: 396cdb5e-8c30-47b8-ac49-1caf2e909c1e, Amount: ₦103.95, Email: officialmico500@gmail.com
+2024-12-20 05:44:39 [INFO]: Payment URL generated successfully for Miracle Emmanuel: https://checkout.paystack.com/vlmsaoh1kvf2eao
+2024-12-20 05:44:50 [INFO]: Initiating payment for Miracle Emmanuel. CartID: fbcd00a6-01f8-444b-a213-70b0c5748573, Amount: ₦242.55, Email: officialmico500@gmail.com
+2024-12-20 05:44:51 [INFO]: Payment URL generated successfully for Miracle Emmanuel: https://checkout.paystack.com/tey7hnns2nc0m1r
+2024-12-20 05:45:01 [INFO]: Initiating payment for Miracle Emmanuel. CartID: 6e797d0b-b0a1-4752-81ba-0d9ef8e5991a, Amount: ₦2737.35, Email: officialmico500@gmail.com
+2024-12-20 05:45:02 [INFO]: Payment URL generated successfully for Miracle Emmanuel: https://checkout.paystack.com/otbmpgzkmogtyg8
+2024-12-20 05:48:19 [INFO]: Initiating payment for Miracle Emmanuel. CartID: bceea2ad-aa25-45ed-9f58-c47f7d63ffc8, Amount: ₦82.17, Email: officialmico500@gmail.com
+2024-12-20 05:48:19 [INFO]: Payment URL generated successfully for Miracle Emmanuel: https://checkout.paystack.com/34etx8qvj8bny4i

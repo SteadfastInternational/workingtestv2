@@ -29,6 +29,7 @@
     "nodemailer": "^6.9.16",
     "paystack-api": "^2.0.6",
     "slugify": "^1.6.6",
+    "uuid": "^11.0.3",
     "winston": "^3.17.0",
     "winston-daily-rotate-file": "^5.0.0"
   },
