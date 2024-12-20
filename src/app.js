@@ -5,7 +5,7 @@ const cors = require("cors");
 
 // Import Routes
 const productRoutes = require("./routes/productRoutes");
-const orderRoutes = require("./routes/orderRoutes");
+const orderRoutes = require("./routes/OrderRoutes");
 const categoryRoutes = require("./routes/categoryRoutes");
 const addressRoutes = require("./routes/addressRoutes");
 const paymentRoutes = require("./routes/PaymentRoutes");
