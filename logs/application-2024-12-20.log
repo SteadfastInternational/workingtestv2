@@ -49,3 +49,7 @@
 2024-12-20 20:59:32 [INFO]: Initiating payment for Miracle Emmanuel. CartID: b7d17949-f85e-4007-89f9-c209b61eee64, Amount: ₦5405.4, Email: officialmico500@gmail.com
 2024-12-20 20:59:33 [INFO]: Payment URL generated successfully for Miracle Emmanuel: https://checkout.paystack.com/6fbwlaxiu5d0gvq
 2024-12-20 21:01:11 [ERROR]: Error processing Paystack webhook:
+2024-12-20 21:07:52 [INFO]: Initiating payment for Miracle Emmanuel. CartID: 5aa448b1-4ca1-4e66-89dd-f020be4f7408, Amount: ₦5405.4, Email: officialmico500@gmail.com
+2024-12-20 21:07:53 [INFO]: Payment URL generated successfully for Miracle Emmanuel: https://checkout.paystack.com/iydacy5a0xmdyp2
+2024-12-20 21:08:53 [ERROR]: Webhook signature mismatch
+2024-12-20 21:08:53 [ERROR]: Error processing Paystack webhook:
