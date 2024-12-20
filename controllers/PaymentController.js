@@ -109,7 +109,6 @@ const isValidSignature = (rawBody, signature) => {
   return hash === signature;
 };
 
-
 /**
  * Processes successful payment event automatically.
  * Verifies payment and updates the order and cart.

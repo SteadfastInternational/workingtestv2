@@ -53,3 +53,24 @@
 2024-12-20 21:07:53 [INFO]: Payment URL generated successfully for Miracle Emmanuel: https://checkout.paystack.com/iydacy5a0xmdyp2
 2024-12-20 21:08:53 [ERROR]: Webhook signature mismatch
 2024-12-20 21:08:53 [ERROR]: Error processing Paystack webhook:
+2024-12-20 21:29:43 [INFO]: Initiating payment for Miracle Emmanuel. CartID: 12684a5d-e92e-4cfd-bad9-425146cf770e, Amount: ₦5405.4, Email: officialmico500@gmail.com
+2024-12-20 21:29:45 [INFO]: Payment URL generated successfully for Miracle Emmanuel: https://checkout.paystack.com/1xotgwxpn6z3bjv
+2024-12-20 21:29:46 [INFO]: Initiating payment for Miracle Emmanuel. CartID: 0244c51f-faf5-4678-9c09-a41b96129b75, Amount: ₦5405.4, Email: officialmico500@gmail.com
+2024-12-20 21:29:46 [INFO]: Payment URL generated successfully for Miracle Emmanuel: https://checkout.paystack.com/urnhemrf5iz0deo
+2024-12-20 21:30:35 [ERROR]: Webhook signature mismatch
+2024-12-20 21:30:35 [ERROR]: Error processing Paystack webhook:
+2024-12-20 21:45:06 [INFO]: Initiating payment for Miracle Emmanuel. CartID: 708483a8-7d1d-4f47-807d-12bb7f662731, Amount: ₦5405.4, Email: officialmico500@gmail.com
+2024-12-20 21:45:07 [INFO]: Payment URL generated successfully for Miracle Emmanuel: https://checkout.paystack.com/bs6g6tpwnpugfhn
+2024-12-20 21:46:08 [INFO]: Received Paystack webhook with event: undefined
+2024-12-20 21:46:08 [ERROR]: Webhook signature mismatch
+2024-12-20 21:46:08 [ERROR]: Error: Unauthorized
+    at handleWebhook (C:\Users\HP\Documents\GitHub\workingtestv2\controllers\PaymentController.js:62:11)
+    at C:\Users\HP\Documents\GitHub\workingtestv2\routes\PaymentRoutes.js:35:11
+    at Layer.handle [as handle_request] (C:\Users\HP\Documents\GitHub\workingtestv2\node_modules\express\lib\router\layer.js:95:5)
+    at next (C:\Users\HP\Documents\GitHub\workingtestv2\node_modules\express\lib\router\route.js:149:13)
+    at Route.dispatch (C:\Users\HP\Documents\GitHub\workingtestv2\node_modules\express\lib\router\route.js:119:3)
+    at Layer.handle [as handle_request] (C:\Users\HP\Documents\GitHub\workingtestv2\node_modules\express\lib\router\layer.js:95:5)
+    at C:\Users\HP\Documents\GitHub\workingtestv2\node_modules\express\lib\router\index.js:284:15
+    at Function.process_params (C:\Users\HP\Documents\GitHub\workingtestv2\node_modules\express\lib\router\index.js:346:12)
+    at next (C:\Users\HP\Documents\GitHub\workingtestv2\node_modules\express\lib\router\index.js:280:10)
+    at Function.handle (C:\Users\HP\Documents\GitHub\workingtestv2\node_modules\express\lib\router\index.js:175:3)
