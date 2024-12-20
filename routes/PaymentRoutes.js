@@ -28,10 +28,21 @@ router.post('/paystack/initiate', async (req, res) => {
 // Paystack Webhook route to handle payment events
 router.post('/paystack/webhook', async (req, res) => {
   try {
+    // Log the incoming request for debugging purposes
+    logger.info(`Received Paystack webhook with event: ${req.body.event}`);
+
+    // Process the webhook
     await handleWebhook(req.body, req.headers);
-    res.sendStatus(200); // Acknowledge receipt of the webhook
+
+    // Respond with a 200 status to acknowledge receipt
+    res.sendStatus(200);
   } catch (error) {
-    logger.error('Error processing Paystack webhook:', error.message);
+    // Log detailed error message
+    logger.error(`Error processing Paystack webhook: ${error.message}`, {
+      stack: error.stack, // Include stack trace for better debugging
+    });
+
+    // Send a 401 status with the error message
     res.status(401).send(error.message || 'Unauthorized');
   }
 });
