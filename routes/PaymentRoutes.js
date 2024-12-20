@@ -18,16 +18,20 @@ router.post('/paystack/initiate', async (req, res) => {
   }
 });
 
-// Route to handle Paystack webhook for payment updates
 router.post('/paystack/webhook', async (req, res) => {
   try {
-    // Call the handleWebhook function from the controller to process events
-    await handleWebhook(req, res);
+    // Delegate webhook processing to the controller
+    await handleWebhook(req);
 
-    // Respond with 200 OK after processing the webhook
+    // Respond with 200 OK after processing
     res.sendStatus(200);
   } catch (error) {
-    res.status(500).json({ message: 'Error processing webhook', error: error.message });
+    console.error('Error processing Paystack webhook:', error.message);
+
+    // Ensure only one response is sent
+    if (!res.headersSent) {
+      res.status(500).json({ message: 'Internal Server Error', error: error.message });
+    }
   }
 });
 

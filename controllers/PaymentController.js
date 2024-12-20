@@ -50,51 +50,43 @@ const initiatePayment = async (cartId, totalPrice, email, userName, formattedAdd
 };
 
 /**
- * Handles Paystack webhook requests.
- * Verifies authenticity and processes events automatically.
- * @param {object} req - HTTP request object.
- * @param {object} res - HTTP response object.
+ * Processes the Paystack webhook logic.
+ * @param {object} req - The Express request object.
  */
+const handleWebhook = async (req) => {
+  const signature = req.headers['x-paystack-signature'];
 
+  // Verify webhook signature
+  if (!isValidSignature(req.body, signature)) {
+    logger.error('Webhook signature mismatch');
+    throw new Error('Unauthorized'); // Throw error to signal failure to the route
+  }
 
-const handleWebhook = async (req, res) => {
-  try {
-    const signature = req.headers['x-paystack-signature'];
-    if (!isValidSignature(req.body, signature)) {
-      logger.error('Webhook signature mismatch');
-      return res.status(401).send('Unauthorized'); // Early return to prevent further execution
-    }
+  const event = req.body;
+  const userName = `${event?.data?.metadata?.firstName || 'Unknown'} ${event?.data?.metadata?.lastName || 'User'}`;
+  const userEmail = event?.data?.metadata?.email || 'unknown@example.com';
 
-    const event = req.body;
-    const userName = `${event?.data?.metadata?.firstName || 'Unknown'} ${event?.data?.metadata?.lastName || 'User'}`;
-    const userEmail = event?.data?.metadata?.email || 'unknown@example.com';
+  logger.info(`Received webhook event from ${userName}: ${event.event}`);
 
-    logger.info(`Received webhook event from ${userName}: ${event.event}`);
+  // Handle different event types
+  switch (event?.event) {
+    case 'charge.success':
+      logger.info(`Processing successful payment for ${userName} with reference: ${event.data.reference}`);
+      await processPaymentSuccess(event.data, userEmail);
+      break;
 
-    // Handle different event types
-    switch (event?.event) {
-      case 'charge.success':
-        logger.info(`Processing successful payment for ${userName} with reference: ${event.data.reference}`);
-        await processPaymentSuccess(event.data, userEmail);
-        break;
-      case 'charge.failed':
-        logger.warn(`Payment failed for ${userName} with reference: ${event.data.reference}`);
-        // Handle payment failure logic
-        break;
-      case 'charge.pending':
-        logger.info(`Payment pending for ${userName} with reference: ${event.data.reference}`);
-        // Handle pending payment logic
-        break;
-      default:
-        logger.warn(`Received unhandled event: ${event.event}`);
-    }
+    case 'charge.failed':
+      logger.warn(`Payment failed for ${userName} with reference: ${event.data.reference}`);
+      // Handle payment failure logic here
+      break;
 
-    return res.sendStatus(200); // Only send response here after processing is done
-  } catch (error) {
-    logger.error('Error processing webhook', error);
-    if (!res.headersSent) { // Check if headers have been sent already
-      return res.status(500).send('Internal Server Error'); // Only send response if not sent already
-    }
+    case 'charge.pending':
+      logger.info(`Payment pending for ${userName} with reference: ${event.data.reference}`);
+      // Handle pending payment logic here
+      break;
+
+    default:
+      logger.warn(`Received unhandled event: ${event.event}`);
   }
 };
 
@@ -111,6 +103,7 @@ const isValidSignature = (body, signature) => {
     .digest('hex');
   return hash === signature;
 };
+
 
 
 /**
