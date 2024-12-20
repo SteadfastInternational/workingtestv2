@@ -25,7 +25,6 @@ if (!PAYSTACK_SECRET_KEY || !PAYSTACK_WEBHOOK_SECRET) {
  * @param {string} formattedAddress - Formatted address from the cart.
  * @returns {string} Payment gateway redirection URL.
  */
-
 const initiatePayment = async (cartId, totalPrice, email, userName, formattedAddress) => {
   try {
     logger.info(`Initiating payment for ${userName}. CartID: ${cartId}, Amount: ₦${totalPrice}, Email: ${email}`);
@@ -44,25 +43,26 @@ const initiatePayment = async (cartId, totalPrice, email, userName, formattedAdd
     logger.info(`Payment URL generated successfully for ${userName}: ${paymentUrl}`);
     return paymentUrl;
   } catch (error) {
-    logger.error(`Payment initiation failed for CartID: ${cartId} - User: ${userName}`, error);
+    logger.error(`Payment initiation failed for CartID: ${cartId} - User: ${userName}`, error.message);
     throw new Error('Unable to initiate payment. Please try again.');
   }
 };
 
 /**
  * Processes the Paystack webhook logic.
- * @param {object} req - The Express request object.
+ * @param {Buffer} rawBody - Raw request body as Buffer.
+ * @param {object} headers - Request headers.
  */
-const handleWebhook = async (req) => {
-  const signature = req.headers['x-paystack-signature'];
+const handleWebhook = async (rawBody, headers) => {
+  const signature = headers['x-paystack-signature'];
 
   // Verify webhook signature
-  if (!isValidSignature(req.body, signature)) {
+  if (!isValidSignature(rawBody, signature)) {
     logger.error('Webhook signature mismatch');
-    throw new Error('Unauthorized'); // Throw error to signal failure to the route
+    throw new Error('Unauthorized');
   }
 
-  const event = req.body;
+  const event = JSON.parse(rawBody.toString()); // Parse raw body into JSON
   const userName = `${event?.data?.metadata?.firstName || 'Unknown'} ${event?.data?.metadata?.lastName || 'User'}`;
   const userEmail = event?.data?.metadata?.email || 'unknown@example.com';
 
@@ -92,18 +92,17 @@ const handleWebhook = async (req) => {
 
 /**
  * Verifies webhook signature from Paystack.
- * @param {object} body - Request payload.
+ * @param {Buffer} rawBody - Raw request body as Buffer.
  * @param {string} signature - Signature from headers.
  * @returns {boolean} Whether the signature is valid.
  */
-const isValidSignature = (body, signature) => {
+const isValidSignature = (rawBody, signature) => {
   const hash = crypto
-    .createHmac('sha512', process.env.PAYSTACK_WEBHOOK_SECRET) // Use environment variable for security
-    .update(JSON.stringify(body))
+    .createHmac('sha512', PAYSTACK_WEBHOOK_SECRET)
+    .update(rawBody)
     .digest('hex');
   return hash === signature;
 };
-
 
 
 /**

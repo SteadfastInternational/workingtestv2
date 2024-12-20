@@ -20,18 +20,11 @@ router.post('/paystack/initiate', async (req, res) => {
 
 router.post('/paystack/webhook', async (req, res) => {
   try {
-    // Delegate webhook processing to the controller
-    await handleWebhook(req);
-
-    // Respond with 200 OK after processing
+    await handleWebhook(req.body, req.headers);
     res.sendStatus(200);
   } catch (error) {
-    console.error('Error processing Paystack webhook:', error.message);
-
-    // Ensure only one response is sent
-    if (!res.headersSent) {
-      res.status(500).json({ message: 'Internal Server Error', error: error.message });
-    }
+    logger.error('Error processing Paystack webhook:', error.message);
+    res.status(401).send(error.message || 'Unauthorized');
   }
 });
 

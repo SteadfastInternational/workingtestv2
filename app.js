@@ -2,6 +2,7 @@ const express = require("express");
 const dotenv = require("dotenv");
 const connectDB = require("./config/db");
 const cors = require("cors");
+const bodyParser = require("body-parser"); // For raw body parsing
 
 // Import Routes
 const productRoutes = require("./routes/productRoutes");
@@ -36,6 +37,10 @@ app.use(cors(corsOptions));
 
 // Middleware to parse JSON bodies
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Specific raw body parser for Paystack webhook (before webhook route)
+app.use("/api/payment/webhook", bodyParser.raw({ type: "application/json" }));
 
 // Logging Middleware for Debugging (only in development mode)
 if (process.env.NODE_ENV === "development") {
@@ -56,7 +61,8 @@ app.use("/api/blogs", blogRoutes); // Blog routes
 app.use("/api/auth", authRoutes); // Authentication routes
 app.use("/api/admin", adminRoutes); // Admin routes
 app.use("/api", cartRoutes); // Cart routes
-app.use('/coupons', couponRoutes); //Coupon Fetching Routes 
+app.use('/coupons', couponRoutes); // Coupon Fetching Routes
+
 // 404 Error Middleware for Undefined Routes
 app.use((req, res) => {
   res.status(404).json({ error: `Route ${req.method} ${req.originalUrl} not found` });
