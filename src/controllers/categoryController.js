@@ -1,4 +1,4 @@
-const Category = require('../models/Category');
+const Category = require('../models/category');
 const cloudinary = require('../config/cloudinary');
 const path = require('path');
 const logger = require('../config/logger'); // Import your logger

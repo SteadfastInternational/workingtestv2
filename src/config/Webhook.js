@@ -1,7 +1,7 @@
 const axios = require('axios');
 const crypto = require('crypto');
 // Import your CartModel to save cart details
-const CartModel = require('./models/Cart');
+const CartModel = require('../models/cart');
 
 const handlePaystackWebhook = async (req, res) => {
   const secret = 'YOUR_PAYSTACK_WEBHOOK_SECRET';

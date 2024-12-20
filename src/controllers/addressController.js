@@ -1,5 +1,5 @@
 const Joi = require('joi');
-const Address = require('../models/Address');
+const Address = require('../models/address');
 const logger = require('../utils/logger');
 
 // Joi schema for request validation
