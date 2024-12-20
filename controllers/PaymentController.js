@@ -97,13 +97,17 @@ const handleWebhook = async (rawBody, headers) => {
  * @returns {boolean} Whether the signature is valid.
  */
 const isValidSignature = (rawBody, signature) => {
+  // Convert rawBody to string for HMAC update
+  const bodyString = rawBody.toString();
+
+  // Generate HMAC hash and compare with the signature
   const hash = crypto
     .createHmac('sha512', PAYSTACK_WEBHOOK_SECRET)
-    .update(rawBody)
+    .update(bodyString) // Ensure rawBody is stringified
     .digest('hex');
+
   return hash === signature;
 };
-
 
 /**
  * Processes successful payment event automatically.
@@ -302,6 +306,7 @@ const initiateRefund = async (paymentReference, amount) => {
 module.exports = {
   initiatePayment,
   handleWebhook,
+  isValidSignature,
   processPaymentSuccess,
   updateStockAfterPayment,
   processRefund,

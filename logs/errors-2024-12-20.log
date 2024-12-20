@@ -22,3 +22,4 @@
     at async tryOperation (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\operations\execute_operation.js:199:20)
     at async executeOperation (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\operations\execute_operation.js:69:16)
     at async Collection.insertOne (C:\Users\HP\Documents\GitHub\workingtest\node_modules\mongoose\node_modules\mongodb\lib\collection.js:154:16)
+2024-12-20 21:01:11 [ERROR]: Error processing Paystack webhook:
