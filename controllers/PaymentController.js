@@ -1,11 +1,7 @@
 const axios = require('axios');
 const crypto = require('crypto');
-const CartModel = require('../models/cart');
-const ProductModel = require('../models/products');
-const OrderController = require('./OrderController');
 const { sendSuccessEmail, sendFailureEmail } = require('../mailtrap/email');
 const logger = require('../utils/logger');
-const generateInvoiceHtml = require('../templates/invoiceTemplate');
 const { updateStockAfterPayment } = require('./cartV2Controller'); // Import the stock update function
 
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;

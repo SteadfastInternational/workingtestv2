@@ -40,7 +40,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Specific raw body parser for Paystack webhook (before webhook route)
-app.use("/api/payment/webhook", bodyParser.raw({ type: "application/json" }));
+app.use("/api/payment/paystack/webhook", bodyParser.raw({ type: "application/json" }));
 
 // Logging Middleware for Debugging (only in development mode)
 if (process.env.NODE_ENV === "development") {
