@@ -377,10 +377,26 @@ const updateCartAndCreateOrder = async (metadata, amount, reference, userName) =
  */
 const sendInvoiceEmail = async (metadata, amount, userName, userEmail) => {
   try {
+    // Validate userEmail type and format
+    if (typeof userEmail !== 'string') {
+      if (typeof userEmail === 'object') {
+        userEmail = userEmail.email || ''; // Assuming 'email' is a key in the object
+      }
+      if (typeof userEmail !== 'string') {
+        throw new Error(`Expected a string for userEmail but got: ${typeof userEmail}`);
+      }
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(userEmail)) {
+      throw new Error(`Invalid email address provided: ${userEmail}`);
+    }
+
     logger.info(`Preparing invoice email for ${userName || 'Unknown User'}, CartID: ${metadata.cartId}`);
 
     // Query the database to retrieve the cart's items using metadata.cartId (which is a string)
-    const cart = await CartModel.findOne({ cartId: metadata.cartId }); // Query by cartId string
+    const cart = await CartModel.findOne({ cartId: metadata.cartId });
 
     if (!cart) {
       logger.error(`Cart with ID ${metadata.cartId} not found`);
@@ -389,14 +405,18 @@ const sendInvoiceEmail = async (metadata, amount, userName, userEmail) => {
 
     // Generate HTML content for cart items
     const cartItemsHtml = await generateCartItemsHtml(cart.items);
-    
+
     // Generate invoice HTML with dynamically populated placeholders
+    if (typeof generateInvoiceHtml !== 'function') {
+      throw new Error("Invoice email template is not defined correctly.");
+    }
+
     const invoiceHtml = generateInvoiceHtml
       .replace('{{name}}', userName || 'Unknown User')
       .replace('{{formattedAddress}}', metadata.formattedAddress || 'No address provided')
       .replace('{{email}}', userEmail)
       .replace('{{sanitizedCartItemsHtml}}', cartItemsHtml)
-      .replace('{{totalAmount}}', amount.toFixed(2));  // Format amount to two decimal places
+      .replace('{{totalAmount}}', amount.toFixed(2)); // Format amount to two decimal places
 
     // Send the email
     await sendEmail(userEmail, 'Payment Received - Invoice', invoiceHtml);
@@ -404,6 +424,7 @@ const sendInvoiceEmail = async (metadata, amount, userName, userEmail) => {
     logger.info(`Invoice email sent to ${userName || 'Unknown User'} at: ${userEmail}`);
   } catch (error) {
     logger.error(`Error sending invoice email to ${userName || 'Unknown User'} at: ${userEmail}`, error);
+    throw new Error(`Error sending invoice email: ${error.message || error}`);
   }
 };
 
@@ -416,7 +437,7 @@ const generateCartItemsHtml = async (items) => {
   let cartItemsHtml = '';
   for (const item of items) {
     const productImage = item.image || 'https://via.placeholder.com/80'; // Use item.image if available
-    cartItemsHtml += ` 
+    cartItemsHtml += `
       <tr>
         <td><img src="${productImage}" alt="${item.productName}" width="80" /></td>
         <td>${item.productName}</td>
@@ -437,21 +458,25 @@ const generateCartItemsHtml = async (items) => {
  */
 const sendEmail = async (userEmail, subject, htmlContent) => {
   try {
+    // Ensure recipient is in the correct format
+    const recipient = [{ email: userEmail }];
+
     const message = {
-      from: sender,  // Use the sender object from mailtrap.js
-      to: [userEmail], // Pass the email directly as an array
+      from: sender, // Use the sender object from mailtrap.js
+      to: recipient, // Recipient is an array of objects
       subject,
       html: htmlContent,
     };
 
     // Send the email via Mailtrap
-    await mailtrapClient.send(message);
+    const response = await mailtrapClient.send(message);
     logger.info(`Email sent to ${userEmail} with subject: ${subject}`);
+    return response;
   } catch (error) {
     logger.error('Failed to send email', error);
+    throw new Error(`Error sending email to ${userEmail}: ${error.message || error}`);
   }
 };
-
 
 
 
