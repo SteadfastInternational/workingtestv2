@@ -375,6 +375,9 @@ const updateCartAndCreateOrder = async (metadata, amount, reference, userName) =
  */
 const sendInvoiceEmail = async (metadata, amount, userName, userEmail) => {
   try {
+    // Log the userEmail to see its value before any checks or validation
+    console.log("User email before validation:", userEmail);
+
     // Validate userEmail type and format
     if (typeof userEmail !== 'string') {
       if (typeof userEmail === 'object') {
@@ -393,7 +396,7 @@ const sendInvoiceEmail = async (metadata, amount, userName, userEmail) => {
 
     logger.info(`Preparing invoice email for ${userName || 'Unknown User'}, CartID: ${metadata.cartId}`);
 
-    // Retrieve the cart's items using metadata.cartId (which is a string)
+    // Query the database to retrieve the cart's items using metadata.cartId (which is a string)
     const cart = await CartModel.findOne({ cartId: metadata.cartId });
 
     if (!cart) {
@@ -404,10 +407,11 @@ const sendInvoiceEmail = async (metadata, amount, userName, userEmail) => {
     // Generate HTML content for cart items
     const cartItemsHtml = await generateCartItemsHtml(cart.items);
 
-    // Define the subject explicitly
-    const subject = `Payment Received - Invoice for ${userName || 'Customer'}`;
-
     // Generate invoice HTML with dynamically populated placeholders
+    if (typeof generateInvoiceHtml !== 'function') {
+      throw new Error("Invoice email template is not defined correctly.");
+    }
+
     const invoiceHtml = generateInvoiceHtml
       .replace('{{name}}', userName || 'Unknown User')
       .replace('{{formattedAddress}}', metadata.formattedAddress || 'No address provided')
@@ -415,8 +419,8 @@ const sendInvoiceEmail = async (metadata, amount, userName, userEmail) => {
       .replace('{{sanitizedCartItemsHtml}}', cartItemsHtml)
       .replace('{{totalAmount}}', amount.toFixed(2)); // Format amount to two decimal places
 
-    // Send the email using the imported sendEmail function
-    await sendEmail(userEmail, subject, invoiceHtml);
+    // Send the email
+    await sendEmail(userEmail, 'Payment Received - Invoice', invoiceHtml);
 
     logger.info(`Invoice email sent to ${userName || 'Unknown User'} at: ${userEmail}`);
   } catch (error) {
@@ -424,6 +428,7 @@ const sendInvoiceEmail = async (metadata, amount, userName, userEmail) => {
     throw new Error(`Error sending invoice email: ${error.message || error}`);
   }
 };
+
 
 
 
