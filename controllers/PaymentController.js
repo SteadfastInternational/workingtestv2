@@ -23,9 +23,10 @@ if (!PAYSTACK_SECRET_KEY || !PAYSTACK_WEBHOOK_SECRET) {
  * @param {string} email - Customer's email.
  * @param {string} userName - Customer's full name.
  * @param {string} formattedAddress - Formatted address from the cart.
+ * @param {string} userId - User's unique identifier.
  * @returns {string} Payment gateway redirection URL.
  */
-const initiatePayment = async (cartId, totalPrice, email, userName, formattedAddress) => {
+const initiatePayment = async (cartId, totalPrice, email, userName, formattedAddress, userId) => {
   try {
     logger.info(`Initiating payment for ${userName}. CartID: ${cartId}, Amount: ₦${totalPrice}, Email: ${email}`);
 
@@ -34,7 +35,7 @@ const initiatePayment = async (cartId, totalPrice, email, userName, formattedAdd
       {
         email,
         amount: totalPrice * 100, // Amount in kobo (100 kobo = 1 Naira)
-        metadata: { cartId, formattedAddress, userName },
+        metadata: { cartId, formattedAddress, userName, userId }, // Include userId in metadata
       },
       { headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` } }
     );
@@ -47,8 +48,6 @@ const initiatePayment = async (cartId, totalPrice, email, userName, formattedAdd
     throw new Error('Unable to initiate payment. Please try again.');
   }
 };
-
-
 
 
 /**
@@ -267,7 +266,7 @@ const processPaymentSuccess = async (paymentData, userEmail) => {
 
     // Pass userEmail as a string to the email functions
     await sendPaymentSuccessEmail(userEmail, userName, amount); // Send success email
-    await updateCartAndCreateOrder(metadata.cartId, amount, reference,);
+    await updateCartAndCreateOrder(metadata.cartId, amount, reference, userName, metadata.userId); // Pass metadata.cartId and metadata.userId
     await updateStockAfterPayment('paid', metadata.cartId); // Update stock
     await sendInvoiceEmail(userEmail, amount, userName); // Send invoice email after success
 
@@ -287,21 +286,23 @@ const processPaymentSuccess = async (paymentData, userEmail) => {
 
 
 
-
 /**
  * Updates the cart and creates an order after successful payment.
  * @param {object} metadata - Metadata containing cart details.
  * @param {number} amount - Payment amount.
  * @param {string} reference - Paystack payment reference.
  * @param {string} userName - Customer's full name.
+ * @param {string} userId - Customer's unique identifier from metadata.
  */
 const updateCartAndCreateOrder = async (metadata, amount, reference, userName) => {
+  const { userId, cartId } = metadata;  // Extract userId and cartId from metadata
+
   try {
-    logger.info(`Updating cart and creating order for ${userName}. CartID: ${metadata.cartId}`);
+    logger.info(`Updating cart and creating order for ${userName}. CartID: ${cartId}`);
 
     // Update the cart payment status and reference
     await CartModel.updateOne(
-      { cartId: metadata.cartId },
+      { cartId },
       {
         paymentStatus: 'Paid',
         paymentReference: reference,
@@ -309,14 +310,17 @@ const updateCartAndCreateOrder = async (metadata, amount, reference, userName) =
     );
 
     // Pass the correct arguments (cartId and userId) to createOrder
-    await OrderController.createOrder(metadata.cartId, userName);
+    await OrderController.createOrder(cartId, userId);  // Use userId from metadata
 
-    logger.info(`Order created successfully for ${userName} with CartID: ${metadata.cartId}`);
+    logger.info(`Order created successfully for ${userName} with CartID: ${cartId}`);
   } catch (error) {
-    logger.error(`Failed to update cart or create order for ${userName} - CartID: ${metadata.cartId}`, error);
+    logger.error(`Failed to update cart or create order for ${userName} - CartID: ${cartId}`, error);
     throw new Error('Order processing failed.');
   }
 };
+
+
+
 
 
 /**

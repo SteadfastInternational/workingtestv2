@@ -113,25 +113,34 @@ const createCart = async (req, res) => {
     const formattedAddress = address.formattedAddress;
 
     // Create the new cart
-    const newCart = new Cart({
-      userId: req.user._id,
-      cartId: uuidv4(), // Generate a unique cart ID
-      userFirstName: req.user.firstName,
-      userLastName: req.user.lastName,
-      email: req.user.email,
-      items: parsedItems,
-      totalCartPrice: finalPrice,
-      coupon: {
-        code: couponCode || null,
-        discountPercentage,
-        appliedAt: couponCode ? new Date() : null,
-      },
-      address: formattedAddress,
-    });
+const newCart = new Cart({
+  userId: req.user._id, // Include userId here
+  cartId: uuidv4(), // Generate a unique cart ID
+  userFirstName: req.user.firstName,
+  userLastName: req.user.lastName,
+  email: req.user.email,
+  items: parsedItems,
+  totalCartPrice: finalPrice,
+  coupon: {
+    code: couponCode || null,
+    discountPercentage,
+    appliedAt: couponCode ? new Date() : null,
+  },
+  address: formattedAddress,
+});
 
-    await newCart.save();
+await newCart.save();
 
-    const paymentUrl = await initiatePayment(newCart.cartId, finalPrice, req.user.email, `${req.user.firstName} ${req.user.lastName}`, formattedAddress);
+// Initiate payment with the userId included
+const paymentUrl = await initiatePayment(
+  newCart.cartId, 
+  finalPrice, 
+  req.user.email, 
+  `${req.user.firstName} ${req.user.lastName}`, 
+  formattedAddress, 
+  req.user._id // Pass userId as part of the payment initiation
+);
+
 
     return res.status(201).json({
       message: 'Cart created successfully.',
