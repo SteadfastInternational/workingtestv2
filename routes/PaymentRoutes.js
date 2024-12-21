@@ -33,51 +33,23 @@ router.post('/paystack/initiate', async (req, res) => {
   }
 });
 
-// Paystack Webhook route to handle payment events
-router.post('/paystack/webhook', express.json({
-  verify: (req, res, buf) => {
-    // Save raw body for signature verification
-    if (req.originalUrl.includes('/paystack/webhook')) {
-      req.rawBody = buf.toString('utf8');
-    }
-  },
-}), async (req, res) => {
+
+// Webhook route handler
+router.post('/paystack/webhook', async (req, res) => {
   try {
-    // Check if rawBody exists
-    if (!req.rawBody) {
-      throw new Error('Webhook body is missing');
+    const signature = req.headers['x-paystack-signature']; // Paystack signature header
+    if (!signature) {
+      return res.status(400).send('No signature found');
     }
 
-    // Extract the signature from headers
-    const signature = req.headers['x-paystack-signature'];
+    // Verify the Paystack webhook signature
+    handleWebhook(req.rawBody, signature);
 
-    // Validate the signature using HMAC
-    const hash = crypto
-      .createHmac('sha512', PAYSTACK_WEBHOOK_SECRET)
-      .update(req.rawBody, 'utf8')
-      .digest('hex');
-
-    if (hash !== signature) {
-      logger.warn('Invalid Paystack webhook signature');
-      return res.status(401).send('Unauthorized');
-    }
-
-    // Log the incoming request
-    logger.info('Verified Paystack webhook event');
-
-    // Process the webhook with the parsed body
-    await handleWebhook(req.body);
-
-    // Acknowledge receipt with a 200 status
-    res.sendStatus(200);
+    // Proceed with the rest of the webhook processing (e.g., updating database, etc.)
+    res.sendStatus(200); // Acknowledge receipt of the webhook
   } catch (error) {
-    // Log the error details
-    logger.error(`Error processing Paystack webhook: ${error.message}`, {
-      stack: error.stack,
-    });
-
-    // Respond with a 500 status and error message
-    res.status(500).send(error.message || 'Error processing webhook');
+    logger.error('Error processing Paystack webhook:', error.message);
+    res.status(400).send('Webhook signature verification failed');
   }
 });
 

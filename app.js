@@ -39,7 +39,7 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Specific raw body parser for Paystack webhook (must be placed before any body parsing middleware)
+// Specific raw body parser for Paystack webhook (this must be placed before any body parsing middleware)
 app.use(
   "/api/payment/paystack/webhook",
   express.raw({
