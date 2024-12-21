@@ -3,7 +3,7 @@ const crypto = require('crypto');
 const CartModel = require('../models/cart');
 const ProductModel = require('../models/products');
 const OrderController = require('./OrderController');
-const { sendSuccessEmail, sendFailureEmail } = require('../mailtrap/email');
+const { sendPaymentSuccessEmail, sendPaymentFailureEmail } = require('../mailtrap/email');
 const logger = require('../utils/logger');
 const generateInvoiceHtml = require('../templates/invoiceTemplate');
 const { updateStockAfterPayment } = require('./cartV2Controller'); // Import the stock update function
@@ -249,7 +249,7 @@ const processPaymentSuccess = async (paymentData, userEmail) => {
     // Continue with updating cart and order
     await updateCartAndCreateOrder(metadata, amount, reference, userName);
     await updateStockAfterPayment('paid', metadata.cartId); // Update stock
-    await sendSuccessEmail(metadata, amount, userName, userEmail); // Send success email
+    await sendPaymentSuccessEmail(metadata, amount, userName, userEmail); // Send success email
     await sendInvoiceEmail(metadata, amount, userName, userEmail); // Send invoice email after success
     
     // Log the completion of payment processing
@@ -263,7 +263,7 @@ const processPaymentSuccess = async (paymentData, userEmail) => {
     });
 
     // Send failure email if there is an error
-    await sendFailureEmail(metadata, amount, userName, userEmail); // Send failure email
+    await sendPaymentFailureEmail(metadata, amount, userName, userEmail); // Send failure email
   }
 };
 
