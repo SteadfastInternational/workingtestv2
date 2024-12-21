@@ -2,7 +2,7 @@ const axios = require('axios');
 const crypto = require('crypto');
 const CartModel = require('../models/cart');
 const ProductModel = require('../models/products');
-const OrderController = require('./OrderController');
+const OrderController = require('./OrderV2Controller');
 const { sendPaymentSuccessEmail, sendPaymentFailureEmail } = require('../mailtrap/email');
 const logger = require('../utils/logger');
 const generateInvoiceHtml = require('../templates/invoiceTemplate');
@@ -246,10 +246,9 @@ const processPaymentSuccess = async (paymentData, userEmail) => {
     // Log successful payment verification
     logger.info(`Payment verification successful for ${userName} with reference: ${reference}`);
     
-    // Continue with updating cart and order
+    await sendPaymentSuccessEmail(metadata, amount, userName, userEmail); // Send success email
     await updateCartAndCreateOrder(metadata, amount, reference, userName);
     await updateStockAfterPayment('paid', metadata.cartId); // Update stock
-    await sendPaymentSuccessEmail(metadata, amount, userName, userEmail); // Send success email
     await sendInvoiceEmail(metadata, amount, userName, userEmail); // Send invoice email after success
     
     // Log the completion of payment processing
