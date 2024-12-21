@@ -284,7 +284,6 @@ const processPaymentSuccess = async (paymentData, userEmail) => {
   }
 };
 
-
 /**
  * Updates the cart and creates an order after successful payment.
  * @param {object} metadata - Metadata containing cart details.
@@ -295,6 +294,12 @@ const processPaymentSuccess = async (paymentData, userEmail) => {
  */
 const updateCartAndCreateOrder = async (metadata, amount, reference, userName) => {
   let { userId, cartId } = metadata;  // Extract userId and cartId from metadata
+
+  // Check if userId and cartId are available
+  if (!userId || !cartId) {
+    logger.error(`Missing userId or cartId for ${userName}. Metadata: ${JSON.stringify(metadata)}`);
+    throw new Error('Missing userId or cartId in metadata.');
+  }
 
   try {
     // Ensure userId and cartId are strings
@@ -321,6 +326,7 @@ const updateCartAndCreateOrder = async (metadata, amount, reference, userName) =
     throw new Error('Order processing failed.');
   }
 };
+
 
 
 
