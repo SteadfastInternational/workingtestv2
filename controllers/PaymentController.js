@@ -244,6 +244,9 @@ const processPaymentSuccess = async (paymentData, userEmail) => {
   const { metadata, amount, reference } = paymentData;
   const userName = `${metadata?.userName || 'Unknown'}`;
 
+  // Log the entire paymentData object to verify structure
+  logger.debug('Payment data received:', paymentData);
+
   try {
     // Log the start of the payment verification process
     logger.info(`Verifying payment for ${userName} with reference: ${reference}`);
@@ -279,6 +282,9 @@ const processPaymentSuccess = async (paymentData, userEmail) => {
     // Log successful payment verification
     logger.info(`Payment verification successful for ${userEmail} with reference: ${reference}`);
 
+    // Log metadata to check if userId is available
+    logger.debug('Metadata content:', metadata);
+
     // Pass userEmail as a string to the email functions
     await sendPaymentSuccessEmail(userEmail, userName, amount); // Send success email
     await updateCartAndCreateOrder(metadata.cartId, amount, reference, userName, metadata.userId); // Pass metadata.cartId and metadata.userId
@@ -298,6 +304,9 @@ const processPaymentSuccess = async (paymentData, userEmail) => {
     await sendPaymentFailureEmail(userEmail, userName, amount); // Send failure email
   }
 };
+
+
+
 
 /**
  * Updates the cart and creates an order after successful payment.
