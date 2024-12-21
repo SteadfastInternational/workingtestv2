@@ -89,19 +89,19 @@ const sendWelcomeEmail = async (email, firstName) => {
 
 /**
  * Function to send payment success email
- * @param {string} email - The recipient's email address.
+ * @param {string} userEmail - The recipient's email address.
  * @param {string} userName - The user's first name.
  * @param {number} amount - The amount paid.
  */
-const sendPaymentSuccessEmail = async (email, userName, amount) => {
+const sendPaymentSuccessEmail = async (userEmail, userName, amount) => {
   // Validate email format
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    throw new Error(`Invalid email address provided: ${email}`);
+  if (!emailRegex.test(userEmail)) {
+    throw new Error(`Invalid email address provided: ${userEmail}`);
   }
 
   // Ensure recipient is an array of objects, each containing an email string
-  const recipient = [{ email }];
+  const recipient = [{ userEmail }];
 
   // Ensure PAYMENT_SUCCESS_TEMPLATE is a function and is called with the proper arguments
   if (typeof PAYMENT_SUCCESS_TEMPLATE !== 'function') {
@@ -133,19 +133,19 @@ const sendPaymentSuccessEmail = async (email, userName, amount) => {
 
 /**
  * Function to send payment failure email
- * @param {string} email - The recipient's email address.
+ * @param {string} userEmail - The recipient's email address.
  * @param {string} userName - The user's name.
  * @param {number} amount - The amount attempted to pay.
  */
-const sendPaymentFailureEmail = async (email, userName, amount) => {
+const sendPaymentFailureEmail = async (userEmail, userName, amount) => {
   // Validate email format
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    throw new Error(`Invalid email address provided: ${email}`);
+  if (!emailRegex.test(userEmail)) {
+    throw new Error(`Invalid email address provided: ${userEmail}`);
   }
 
   // Ensure recipient is an array of objects with a valid email string
-  const recipient = [{ email: String(email) }];
+  const recipient = [{ userEmail: String(userEmail) }];
 
   // Ensure PAYMENT_FAILURE_TEMPLATE is a function and is called with proper arguments
   if (typeof PAYMENT_FAILURE_TEMPLATE !== 'function') {
