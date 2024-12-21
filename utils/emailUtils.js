@@ -3,14 +3,14 @@ const logger = require('../utils/logger');
 
 /**
  * Sends a general email to the customer.
- * @param {string | object} userEmail - Email recipient address or an object containing the 'email' property.
+ * @param {string} userEmail - Email recipient address or an object containing the 'email' property.
  * @param {string} subject - Email subject. Defaults to 'Payment Received - Invoice' if not provided.
  * @param {string} htmlContent - HTML content of the email.
  */
 const sendEmail = async (userEmail, subject = 'Payment Received - Invoice', htmlContent) => {
   try {
     // Log the email details before entering the function
-    logger.info(`Attempting to send email to: ${JSON.stringify(userEmail)} with subject: ${subject}`);
+    logger.info(`Attempting to send email to: ${userEmail} with subject: ${subject}`);
 
     // If userEmail is an object, try to extract the 'email' property
     if (typeof userEmail === 'object' && userEmail.email) {
