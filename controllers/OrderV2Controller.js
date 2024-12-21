@@ -1,8 +1,4 @@
-const OrderModel = require('../models/Order');
-const CartModel = require('../models/cart');
-const { sendEmail } = require('../utils/emailUtils'); // Assuming utility exists
-const mongoose = require('mongoose');
-const logger = require('../utils/logger'); // Assuming a logger utility exists
+const { v4: uuidv4 } = require('uuid');  // Importing uuid
 
 class OrderController {
   /**
@@ -19,7 +15,7 @@ class OrderController {
       // Convert userId from string to ObjectId using 'new'
       const userObjectId = new mongoose.Types.ObjectId(userId);
 
-      // Step 1: Fetch the cart using cartId (which is a string, not ObjectId) and validate
+      // Step 1: Fetch the cart using cartId and validate
       const cart = await CartModel.findOne({ cartId: cartId, userId: userObjectId }).session(session);
       if (!cart) {
         logger.error(
@@ -35,20 +31,27 @@ class OrderController {
         throw new Error('Order has already been created for this cart.');
       }
 
-      // Step 2: Generate a unique tracking ID for the order
-      const trackingId = `ORDER-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+      // Step 2: Generate a unique order ID using uuid and timestamp
+      const orderId = `ORDER-${uuidv4()}-${Date.now()}`;  // Unique order ID with UUID and timestamp
 
-      // Step 3: Use the formatted address from the cart
+      // Step 3: Generate a unique tracking ID for the order
+      const trackingId = `STEADFAST-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+
+      // Step 4: Use the formatted address from the cart
       const formattedAddress = cart.formattedAddress || cart.address; // Fallback to cart.address if formattedAddress is unavailable
 
-      // Step 4: Create the order
+      // Step 5: Get total price from cart items
+      const totalPrice = cart.items.reduce((total, item) => total + item.totalPrice, 0); // Calculate total price from items
+
+      // Step 6: Create the order
       const order = new OrderModel({
+        orderId,              // Generated unique order ID
         cartId: cart.cartId,  // Using cartId as a string
         userId: cart.userId,
-        trackingId,
+        trackingId,           // Unique tracking ID
         orderStatus: 'Processed', // Initial status
-        paymentReference: cart.paymentReference,
-        totalPrice: cart.totalPrice,
+        paymentReference: cart.paymentReference,  // Assuming this is available in the cart
+        totalPrice,            // Calculated total price from cart items
         address: formattedAddress,
         items: cart.items,
         createdAt: new Date(),
@@ -56,11 +59,11 @@ class OrderController {
 
       await order.save({ session });
 
-      // Step 5: Mark the cart as completed
+      // Step 7: Mark the cart as completed
       cart.status = 'Completed';
       await cart.save({ session });
 
-      // Step 6: Notify user via email (with retry logic)
+      // Step 8: Notify user via email (with retry logic)
       let emailSent = false;
       let retries = 3;
       while (retries > 0 && !emailSent) {
@@ -105,6 +108,5 @@ class OrderController {
     }
   }
 }
-
 
 module.exports = OrderController;

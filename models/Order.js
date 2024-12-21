@@ -1,4 +1,4 @@
-const Joi = require('joi'); 
+const Joi = require('joi');
 const mongoose = require('mongoose');
 
 // Order schema definition
@@ -40,7 +40,7 @@ const orderSchema = new mongoose.Schema(
         },
       },
     ],
-    totalPrice: {
+    totalCartPrice: {
       type: Number,
       required: true,
     },
@@ -91,25 +91,21 @@ const orderSchema = new mongoose.Schema(
   }
 );
 
-// Middleware to update inventory when the order is created
-orderSchema.pre('save', async function (next) {
-  if (this.isNew) {
-    try {
-      // Iterate through the items and deduct the quantity from inventory
-      for (const item of this.items) {
-        const product = await mongoose.model('Product').findById(item.productId);
-        if (product) {
-          product.quantity -= item.quantity; // Deduct ordered quantity
-          await product.save();
-        }
-      }
-      next();
-    } catch (error) {
-      next(error); // If an error occurs, pass it to the next middleware
-    }
-  } else {
-    next();
-  }
+// Consolidating both 'pre' save middlewares for status color update
+orderSchema.pre('save', function (next) {
+  const statusColorMap = {
+    'Processing': '#B0B0B0', // Ash
+    'In Transit': '#FFFF00', // Yellow
+    'Arrived': '#fff44f',    // Custom color for Arrived
+    'Delivered': '#32CD32',  // Green
+    'Cancelled': '#FF0000',  // Red
+    'Refunded': '#808080',   // Gray for refunded
+  };
+
+  // Update status color based on order status
+  this.statusColor = statusColorMap[this.status] || '#B0B0B0'; // Default to Ash for Processing
+
+  next();
 });
 
 // Static method to create a new order
@@ -122,21 +118,6 @@ orderSchema.statics.createOrder = async function (orderDetails) {
     throw new Error('Error creating order: ' + error.message);
   }
 };
-
-// Middleware to update the status color based on the status
-orderSchema.pre('save', function (next) {
-  const statusColorMap = {
-    'Processing': '#B0B0B0', // Ash
-    'In Transit': '#FFFF00', // Yellow
-    'Arrived': '#fff44f',    // Custom color for Arrived
-    'Delivered': '#32CD32',  // Green
-    'Cancelled': '#FF0000',  // Red
-    'Refunded': '#808080',   // Gray for refunded
-  };
-
-  this.statusColor = statusColorMap[this.status] || '#B0B0B0'; // Default to Ash for Processing
-  next();
-});
 
 // Method to request a refund
 orderSchema.methods.requestRefund = async function (refundAmount) {
