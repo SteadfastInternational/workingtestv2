@@ -1,5 +1,6 @@
 const express = require('express');
 const crypto = require('crypto'); // For HMAC signature validation
+const bodyParser = require('body-parser'); // Ensure you have this imported
 const router = express.Router();
 const { initiatePayment, handleWebhook, processRefund } = require('../controllers/PaymentController');
 const isAdmin = require('../middleware/adminMiddleware');
@@ -7,6 +8,9 @@ const logger = require('../utils/logger');
 
 // Paystack Webhook Secret from environment variables
 const PAYSTACK_WEBHOOK_SECRET = process.env.PAYSTACK_WEBHOOK_SECRET;
+
+// Middleware to parse raw body for Paystack Webhook (before any other body parser)
+router.use('/paystack/webhook', bodyParser.raw({ type: 'application/json' }));
 
 // Route to initiate payment
 router.post('/paystack/initiate', async (req, res) => {
@@ -39,6 +43,11 @@ router.post('/paystack/webhook', express.json({
   },
 }), async (req, res) => {
   try {
+    // Check if rawBody exists
+    if (!req.rawBody) {
+      throw new Error('Webhook body is missing');
+    }
+
     // Extract the signature from headers
     const signature = req.headers['x-paystack-signature'];
 

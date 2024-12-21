@@ -39,10 +39,11 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Specific raw body parser for Paystack webhook
+// Specific raw body parser for Paystack webhook (must be placed before any body parsing middleware)
 app.use(
   "/api/payment/paystack/webhook",
-  express.json({
+  express.raw({
+    type: "application/json",
     verify: (req, res, buf) => {
       if (req.originalUrl.includes("/api/payment/paystack/webhook")) {
         req.rawBody = buf.toString("utf8"); // Save raw body for signature verification
@@ -58,7 +59,6 @@ if (process.env.NODE_ENV === "development") {
     next();
   });
 }
-
 
 // Routes
 app.use("/api/products", productRoutes); // Product routes
