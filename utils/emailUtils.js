@@ -22,6 +22,15 @@ const sendEmail = async (userEmail, subject = 'Payment Received - Invoice', html
       throw new Error(`Invalid email address provided: ${userEmail}`);
     }
 
+    // Log the email after validation
+    logger.info(`Validated userEmail: ${userEmail}`);
+
+    // Validate email format using regex
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(userEmail)) {
+      throw new Error(`Invalid email format: ${userEmail}`);
+    }
+
     // Ensure subject and HTML content are defined and valid
     if (!subject || typeof subject !== 'string') {
       throw new Error('Email subject is required and should be a string.');

@@ -376,7 +376,14 @@ const updateCartAndCreateOrder = async (metadata, amount, reference, userName) =
  */
 const sendInvoiceEmail = async (metadata, amount, userName) => {
   try {
-    let userEmail = metadata.email; // Extract email from metadata
+    // Log the metadata to ensure email is present
+    console.log("Received metadata:", metadata);
+
+    // Check if email exists in metadata
+    let userEmail = metadata.email;
+    if (!userEmail) {
+      throw new Error('Email address is missing in metadata.');
+    }
 
     // Log the userEmail to see its value before any checks or validation
     console.log("User email before validation:", userEmail);
@@ -386,6 +393,9 @@ const sendInvoiceEmail = async (metadata, amount, userName) => {
     if (typeof userEmail !== 'string' || !emailRegex.test(userEmail)) {
       throw new Error(`Invalid email address provided: ${userEmail}`);
     }
+
+    // Early return if email validation fails
+    console.log(`Valid email: ${userEmail}`);
 
     // Log the invoice generation
     console.log(`Preparing invoice email for ${userName || 'Unknown User'}, CartID: ${metadata.cartId}`);
@@ -410,10 +420,11 @@ const sendInvoiceEmail = async (metadata, amount, userName) => {
     console.log(`Invoice email sent to ${userEmail}`);
   } catch (error) {
     // Enhanced error logging
-    console.error(`Error in sendInvoiceEmail for ${userEmail} `, error);
+    console.error(`Error in sendInvoiceEmail for ${userEmail}:`, error);
     throw new Error(`Error sending invoice email: ${error.message || error}`);
   }
 };
+
 
 
 
