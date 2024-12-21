@@ -407,12 +407,12 @@ const sendInvoiceEmail = async (metadata, amount, userEmail) => {
       .replace('{{totalAmount}}', amount && !isNaN(amount) ? amount.toFixed(2) : '0.00');
 
     // Send the email
-    await sendEmail(userEmail, 'Payment Received - Invoice', invoiceHtml);
+    await sendEmail(userEmail, subject , invoiceHtml);
 
-    console.log(`Invoice email sent to ${metadata.userName || 'Unknown User'} at: ${userEmail}`);
+    console.log(`Invoice email sent to ${userEmail}`);
   } catch (error) {
     // Enhanced error logging
-    console.error(`Error in sendInvoiceEmail for ${metadata.userName || 'Unknown User'}: `, error);
+    console.error(`Error in sendInvoiceEmail for ${userEmail} `, error);
     throw new Error(`Error sending invoice email: ${error.message || error}`);
   }
 };
