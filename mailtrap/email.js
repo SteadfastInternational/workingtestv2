@@ -87,7 +87,6 @@ const sendWelcomeEmail = async (email, firstName) => {
 };
 
 
-
 /**
  * Function to send payment success email
  * @param {string} email - The recipient's email address.
@@ -95,8 +94,8 @@ const sendWelcomeEmail = async (email, firstName) => {
  * @param {number} amount - The amount paid.
  */
 const sendPaymentSuccessEmail = async (email, userName, amount) => {
-  // Ensure the email is a string and not wrapped in an object
-  const recipient = email;
+  // Ensure recipient is an array of objects, each containing an email string
+  const recipient = [{ email }];  // Wrap the email in an array of objects
 
   // Ensure PAYMENT_SUCCESS_TEMPLATE is a function and is called with the proper arguments
   if (typeof PAYMENT_SUCCESS_TEMPLATE !== 'function') {
@@ -110,7 +109,7 @@ const sendPaymentSuccessEmail = async (email, userName, amount) => {
     // Send payment success email using Mailtrap client
     const response = await mailtrapClient.send({
       from: sender,
-      to: recipient,  // Pass the email as a string
+      to: recipient,  // Pass recipient as an array of objects
       subject: "Payment Successful",
       html: emailBody,
       category: "Payment",
@@ -122,7 +121,6 @@ const sendPaymentSuccessEmail = async (email, userName, amount) => {
     throw new Error(`Error sending payment success email: ${error.message || error}`);
   }
 };
-
 
 
 /**
