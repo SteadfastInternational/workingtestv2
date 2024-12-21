@@ -37,8 +37,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // Middleware for JSON and URL-encoded bodies
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+
 
 // Specific raw body parser for Paystack webhook (this must be placed before any body parsing middleware)
 app.use(
@@ -52,6 +51,9 @@ app.use(
     },
   })
 );
+
+
+
 
 // Logging Middleware for Debugging (only in development mode)
 if (process.env.NODE_ENV === "development") {
@@ -76,10 +78,21 @@ app.use("/coupons", couponRoutes); // Coupon Fetching Routes
 
 // Paystack Webhook Route (added)
 app.post("/api/payment/paystack/webhook", async (req, res) => {
+  // Log headers and rawBody for debugging
+  console.log('Received webhook headers:', req.headers);
+  console.log('Received webhook body:', req.body); // Log the parsed body if available
+
   // Check if rawBody exists
   if (!req.rawBody) {
     console.error('Raw body is undefined');
     return res.status(400).send("Webhook failed: Raw body missing");
+  }
+
+  // Check if Content-Type is correct
+  const contentType = req.headers['content-type'];
+  if (contentType !== 'application/json') {
+    console.error(`Invalid content type: ${contentType}`);
+    return res.status(400).send("Invalid content type. Expected application/json.");
   }
 
   try {
@@ -92,6 +105,9 @@ app.post("/api/payment/paystack/webhook", async (req, res) => {
   }
 });
 
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // 404 Error Middleware for Undefined Routes
 app.use((req, res) => {
