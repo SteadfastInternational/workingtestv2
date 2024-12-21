@@ -176,12 +176,12 @@ const verifyPaymentStatus = async (reference) => {
     if (status && data?.status === 'success') {
       logger.info(`Transaction ${reference} verified successfully`);
 
-      // Additional validation: Ensure required fields like customer info are present
-      if (data.customer?.email && data.customer?.first_name && data.customer?.last_name) {
-        logger.info(`Valid customer details: ${data.customer.email}`);
+      // Check if customer email is available, but relax other fields.
+      if (data.customer?.email) {
+        logger.info(`Valid customer email: ${data.customer.email}`);
         return 'success';
       } else {
-        logger.error(`Missing customer information in transaction ${reference}`);
+        logger.warn(`Customer email missing for transaction ${reference}`);
         return 'failed';
       }
     }
@@ -197,6 +197,7 @@ const verifyPaymentStatus = async (reference) => {
     throw new Error('Error verifying payment status');
   }
 };
+
 
 
 /**
