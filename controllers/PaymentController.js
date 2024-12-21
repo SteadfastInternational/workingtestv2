@@ -404,6 +404,9 @@ const sendInvoiceEmail = async (metadata, amount, userName, userEmail) => {
     // Generate HTML content for cart items
     const cartItemsHtml = await generateCartItemsHtml(cart.items);
 
+    // Define the subject explicitly
+    const subject = `Payment Received - Invoice for ${userName || 'Customer'}`;
+
     // Generate invoice HTML with dynamically populated placeholders
     const invoiceHtml = generateInvoiceHtml
       .replace('{{name}}', userName || 'Unknown User')
@@ -413,35 +416,13 @@ const sendInvoiceEmail = async (metadata, amount, userName, userEmail) => {
       .replace('{{totalAmount}}', amount.toFixed(2)); // Format amount to two decimal places
 
     // Send the email using the imported sendEmail function
-    await sendEmail(userEmail, 'Payment Received - Invoice', invoiceHtml);
+    await sendEmail(userEmail, subject, invoiceHtml);
 
     logger.info(`Invoice email sent to ${userName || 'Unknown User'} at: ${userEmail}`);
   } catch (error) {
     logger.error(`Error sending invoice email to ${userName || 'Unknown User'} at: ${userEmail}`, error);
     throw new Error(`Error sending invoice email: ${error.message || error}`);
   }
-};
-
-/**
- * Generates HTML content for cart items in the invoice.
- * @param {Array} items - List of purchased items in the cart.
- * @returns {string} HTML string for the cart items.
- */
-const generateCartItemsHtml = async (items) => {
-  let cartItemsHtml = '';
-  for (const item of items) {
-    const productImage = item.image || 'https://via.placeholder.com/80'; // Use item.image if available
-    cartItemsHtml += `
-      <tr>
-        <td><img src="${productImage}" alt="${item.productName}" width="80" /></td>
-        <td>${item.productName}</td>
-        <td>${item.quantity}</td>
-        <td>₦${item.price.toFixed(2)}</td>
-        <td>₦${(item.quantity * item.price).toFixed(2)}</td>
-      </tr>
-    `;
-  }
-  return cartItemsHtml;
 };
 
 

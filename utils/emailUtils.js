@@ -1,32 +1,37 @@
-const { mailtrapClient, sender } = require('../mailtrap/mailtrap.config');
-const logger = require('./logger');
-
-const sendEmail = async (recipientEmail, subject, htmlContent) => {
+/**
+ * Sends a general email to the customer.
+ * @param {string} userEmail - Email recipient address.
+ * @param {string} subject - Email subject.
+ * @param {string} htmlContent - HTML content of the email.
+ */
+const sendEmail = async (userEmail, subject, htmlContent) => {
   try {
-    // Ensure recipientEmail is in the correct format (array of objects)
-    const recipients = Array.isArray(recipientEmail)
-      ? recipientEmail.map((email) => ({ email: String(email) }))
-      : [{ email: String(recipientEmail) }];
+    // Validate recipient email
+    if (!userEmail || typeof userEmail !== 'string') {
+      throw new Error(`Invalid email address provided: ${userEmail}`);
+    }
 
-    // Construct the message object
+    // Ensure subject and HTML content are defined
+    if (!subject || typeof subject !== 'string') {
+      throw new Error('Email subject is required.');
+    }
+    if (!htmlContent || typeof htmlContent !== 'string') {
+      throw new Error('Email content (HTML) is required.');
+    }
+
+    // Construct the email message
     const message = {
-      from: {
-        email: sender.email, // The email address to send from
-        name: sender.name || 'Your Company', // Optionally add a name for the sender
-      },
-      to: recipients, // Ensure this is always an array of objects
-      subject,
-      html: htmlContent,
+      from: sender, // Ensure `sender` is correctly defined
+      to: [userEmail], // Email recipient as an array of strings
+      subject, // Email subject
+      html: htmlContent, // HTML email body
     };
 
-    // Send the email using Mailtrap client
-    const sentMessage = await mailtrapClient.send(message);
-    logger.info(`Invoice successfully sent to ${recipients.map((r) => r.email).join(', ')}`);
-    return sentMessage;
+    // Send the email via Mailtrap
+    await mailtrapClient.send(message);
+    logger.info(`Email sent to ${userEmail} with subject: ${subject}`);
   } catch (error) {
-    logger.error(`Failed to send invoice to ${recipientEmail}: ${error.message || error}`);
-    throw new Error('Failed to send email');
+    logger.error(`Failed to send email to ${userEmail}: ${error.message}`);
+    throw new Error(`Email sending failed: ${error.message}`);
   }
 };
-
-module.exports = { sendEmail };
