@@ -42,6 +42,7 @@ router.post('/paystack/refund', isAdmin, async (req, res) => {
     return res.status(400).json({ message: 'Payment reference and amount are required' });
   }
 
+  
   try {
     // Call the processRefund function from the controller to initiate the refund
     const refundResponse = await processRefund(paymentReference, amount);
