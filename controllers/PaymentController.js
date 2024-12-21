@@ -16,6 +16,15 @@ if (!PAYSTACK_SECRET_KEY || !PAYSTACK_WEBHOOK_SECRET) {
 }
 
 /**
+ * Ensures the provided value is a string. Converts if necessary.
+ * @param {any} value - The value to check and convert.
+ * @returns {string} - The value as a string.
+ */
+const ensureString = (value) => {
+  return typeof value === 'string' ? value : String(value);
+};
+
+/**
  * Initiates payment with Paystack API.
  * Generates a payment URL for redirection.
  * @param {string} cartId - Cart ID for tracking.
@@ -30,12 +39,18 @@ const initiatePayment = async (cartId, totalPrice, email, userName, formattedAdd
   try {
     logger.info(`Initiating payment for ${userName}. CartID: ${cartId}, Amount: ₦${totalPrice}, Email: ${email}`);
 
+    // Ensure userId is a string using the utility function
+    const userIdString = ensureString(userId);
+
+    // Log metadata to ensure userId is correct
+    logger.info(`Metadata: cartId: ${cartId}, formattedAddress: ${formattedAddress}, userName: ${userName}, userId: ${userIdString}`);
+
     const response = await axios.post(
       'https://api.paystack.co/transaction/initialize',
       {
         email,
         amount: totalPrice * 100, // Amount in kobo (100 kobo = 1 Naira)
-        metadata: { cartId, formattedAddress, userName, userId }, // Include userId in metadata
+        metadata: { cartId, formattedAddress, userName, userId: userIdString }, // Ensure userId is a string
       },
       { headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` } }
     );
