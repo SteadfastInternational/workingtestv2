@@ -27,7 +27,7 @@ async function updateOrderStatus(orderId, newStatus) {
     await sendEmail({
       to: order.userId.email,
       subject: `Your Order Status Has Been Updated`,
-      body: `Dear ${order.firstName} ${order.lastName},\n\nYour order status has been updated to: ${newStatus}.\n\nTracking ID: ${order.trackingId}`,
+      body: `Dear ${order.firstName} ${order.lastName},\n\nYour order status has been updated to: ${newStatus}.\n\nTracking ID: ${order.trackingNumber}`,
     });
 
     logger.info(`Order status for order ${orderId} updated to ${newStatus}`);

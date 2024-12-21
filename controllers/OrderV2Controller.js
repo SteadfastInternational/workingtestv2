@@ -76,12 +76,12 @@ class OrderController {
           const emailResponse = await sendEmail({
             to: cart.userId.email,
             subject: 'Your Order Has Been Processed',
-            body: `Dear ${cart.userFirstName} ${cart.userLastName},\n\nYour order has been successfully processed.\n\nTracking ID: ${trackingId}\n\nThank you for shopping with us.`,
+            body: `Dear ${cart.userFirstName} ${cart.userLastName},\n\nYour order has been successfully processed.\n\nTracking ID: ${trackingNumber}\n\nThank you for shopping with us.`,
           });
 
           if (emailResponse.success) {
             logger.info(
-              `Order notification email sent to ${cart.userId.email} with Tracking ID ${trackingId}`
+              `Order notification email sent to ${cart.userId.email} with Tracking ID ${trackingNumber}`
             );
             emailSent = true;
           } else {
@@ -102,7 +102,7 @@ class OrderController {
       }
 
       await session.commitTransaction(); // Commit transaction
-      logger.info(`Order created for user ${userId} with Tracking ID: ${trackingId}`);
+      logger.info(`Order created for user ${userId} with Tracking ID: ${trackingNumber}`);
       return order;
     } catch (error) {
       logger.error(`Error creating order for user ${userId}: ${error.message}`);
