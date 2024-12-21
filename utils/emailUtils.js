@@ -35,3 +35,6 @@ const sendEmail = async (userEmail, subject, htmlContent) => {
     throw new Error(`Email sending failed: ${error.message}`);
   }
 };
+
+
+module.exports = { sendEmail };
