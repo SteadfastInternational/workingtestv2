@@ -16,8 +16,8 @@ class OrderController {
     session.startTransaction();
 
     try {
-      // Convert userId from string to ObjectId
-      const userObjectId = mongoose.Types.ObjectId(userId);
+      // Convert userId from string to ObjectId using 'new'
+      const userObjectId = new mongoose.Types.ObjectId(userId);
 
       // Step 1: Fetch the cart and validate
       const cart = await CartModel.findOne({ _id: cartId, userId: userObjectId }).session(session);
