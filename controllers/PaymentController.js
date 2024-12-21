@@ -252,7 +252,7 @@ const processPaymentSuccess = async (paymentData, userEmail) => {
       // Check if customer email is available, but relax other fields.
       if (data.customer?.email) {
         logger.info(`Valid customer email: ${data.customer.email}`);
-        userEmail = data.customer.email; // Update userEmail with the verified email
+        userEmail = String(data.customer.email); // Ensure userEmail is a string
       } else {
         logger.warn(`Customer email missing for transaction ${reference}`);
         throw new Error('Customer email is missing');
@@ -265,10 +265,11 @@ const processPaymentSuccess = async (paymentData, userEmail) => {
     // Log successful payment verification
     logger.info(`Payment verification successful for ${userEmail} with reference: ${reference}`);
 
-    await sendPaymentSuccessEmail(metadata, amount, userName, userEmail); // Send success email
+    // Pass userEmail as a string to the email functions
+    await sendPaymentSuccessEmail(userEmail, userName, amount); // Send success email
     await updateCartAndCreateOrder(metadata, amount, reference, userName);
     await updateStockAfterPayment('paid', metadata.cartId); // Update stock
-    await sendInvoiceEmail(metadata, amount, userName, userEmail); // Send invoice email after success
+    await sendInvoiceEmail(userEmail, amount, userName); // Send invoice email after success
 
     // Log the completion of payment processing
     logger.info(`Payment success processing complete for ${userName}`);
@@ -280,9 +281,10 @@ const processPaymentSuccess = async (paymentData, userEmail) => {
     });
 
     // Send failure email if there is an error
-    await sendPaymentFailureEmail(metadata, amount, userName, userEmail); // Send failure email
+    await sendPaymentFailureEmail(userEmail, userName, amount); // Send failure email
   }
 };
+
 
 
 

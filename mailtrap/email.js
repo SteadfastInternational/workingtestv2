@@ -86,7 +86,6 @@ const sendWelcomeEmail = async (email, firstName) => {
   }
 };
 
-
 /**
  * Function to send payment success email
  * @param {string} userEmail - The recipient's email address.
@@ -94,12 +93,18 @@ const sendWelcomeEmail = async (email, firstName) => {
  * @param {number} amount - The amount paid.
  */
 const sendPaymentSuccessEmail = async (userEmail, userName, amount) => {
-  // Log userEmail for debugging purposes
+  // Log the userEmail for debugging purposes
   console.log("Received userEmail:", userEmail);
 
-  // Check if userEmail is a string
+  // Ensure userEmail is a string, not an object
   if (typeof userEmail !== 'string') {
-    throw new Error(`Expected a string for userEmail but got: ${typeof userEmail}`);
+    if (typeof userEmail === 'object') {
+      console.log("userEmail is an object:", userEmail);
+      userEmail = userEmail.email || '';  // Assuming 'email' is a key in the object
+    }
+    if (typeof userEmail !== 'string') {
+      throw new Error(`Expected a string for userEmail but got: ${typeof userEmail}`);
+    }
   }
 
   // Validate email format
@@ -141,7 +146,6 @@ const sendPaymentSuccessEmail = async (userEmail, userName, amount) => {
 
 
 
-
 /**
  * Function to send payment failure email
  * @param {string} userEmail - The recipient's email address.
@@ -149,12 +153,18 @@ const sendPaymentSuccessEmail = async (userEmail, userName, amount) => {
  * @param {number} amount - The amount attempted to pay.
  */
 const sendPaymentFailureEmail = async (userEmail, userName, amount) => {
-  // Log userEmail for debugging purposes
+  // Log the userEmail for debugging purposes
   console.log("Received userEmail:", userEmail);
 
-  // Check if userEmail is a string
+  // Ensure userEmail is a string, not an object
   if (typeof userEmail !== 'string') {
-    throw new Error(`Expected a string for userEmail but got: ${typeof userEmail}`);
+    if (typeof userEmail === 'object') {
+      console.log("userEmail is an object:", userEmail);
+      userEmail = userEmail.email || '';  // Assuming 'email' is a key in the object
+    }
+    if (typeof userEmail !== 'string') {
+      throw new Error(`Expected a string for userEmail but got: ${typeof userEmail}`);
+    }
   }
 
   // Validate email format
@@ -166,7 +176,7 @@ const sendPaymentFailureEmail = async (userEmail, userName, amount) => {
   // Ensure recipient is an array of objects with a valid email string
   const recipient = [{ email: String(userEmail) }];
 
-  // Ensure PAYMENT_FAILURE_TEMPLATE is a function and is called with the proper arguments
+  // Ensure PAYMENT_FAILURE_TEMPLATE is a function and is called with proper arguments
   if (typeof PAYMENT_FAILURE_TEMPLATE !== 'function') {
     throw new Error("Payment failure email template is not defined correctly.");
   }
