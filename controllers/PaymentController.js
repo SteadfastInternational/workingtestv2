@@ -268,7 +268,6 @@ const processPaymentSuccess = async (paymentData, userEmail) => {
 };
 
 
-const logger = require('./logger'); // Assuming logger is in a separate module
 
 /**
  * Updates the cart and creates an order after successful payment.
