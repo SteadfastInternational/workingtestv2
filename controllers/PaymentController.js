@@ -170,15 +170,23 @@ const verifyPaymentStatus = async (reference) => {
       headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` },
     });
 
-    const { status, data } = response.data;
+    const { status, message, data } = response.data;
     logger.debug('Paystack response:', response.data);
 
-    if (status === 'success' && data?.status === 'success') {
+    if (status && data?.status === 'success') {
       logger.info(`Transaction ${reference} verified successfully`);
-      return 'success';
+
+      // Additional validation: Ensure required fields like customer info are present
+      if (data.customer?.email && data.customer?.first_name && data.customer?.last_name) {
+        logger.info(`Valid customer details: ${data.customer.email}`);
+        return 'success';
+      } else {
+        logger.error(`Missing customer information in transaction ${reference}`);
+        return 'failed';
+      }
     }
 
-    logger.error(`Paystack transaction ${reference} verification failed: ${data?.message || 'Unknown error'}`);
+    logger.error(`Paystack transaction ${reference} verification failed: ${message || 'Unknown error'}`);
     return 'failed';
   } catch (error) {
     logger.error('Error verifying Paystack payment status:', {
@@ -189,6 +197,7 @@ const verifyPaymentStatus = async (reference) => {
     throw new Error('Error verifying payment status');
   }
 };
+
 
 /**
  * Validates the Paystack webhook signature.
