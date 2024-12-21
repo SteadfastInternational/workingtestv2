@@ -54,6 +54,8 @@ app.use(
 
 
 
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Logging Middleware for Debugging (only in development mode)
 if (process.env.NODE_ENV === "development") {
@@ -106,8 +108,6 @@ app.post("/api/payment/paystack/webhook", async (req, res) => {
 });
 
 
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
 // 404 Error Middleware for Undefined Routes
 app.use((req, res) => {

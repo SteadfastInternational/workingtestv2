@@ -46,3 +46,9 @@
     at Function.process_params (C:\Users\HP\Documents\GitHub\workingtestv2\node_modules\express\lib\router\index.js:346:12)
     at next (C:\Users\HP\Documents\GitHub\workingtestv2\node_modules\express\lib\router\index.js:280:10)
     at Function.handle (C:\Users\HP\Documents\GitHub\workingtestv2\node_modules\express\lib\router\index.js:175:3)
+2024-12-21 10:41:51 [ERROR]: TypeError: Cannot destructure property 'items' of 'req.body' as it is undefined.
+    at createCart (C:\Users\HP\Documents\GitHub\workingtestv2\controllers\cartController.js:20:13)
+    at Layer.handle [as handle_request] (C:\Users\HP\Documents\GitHub\workingtestv2\node_modules\express\lib\router\layer.js:95:5)
+    at next (C:\Users\HP\Documents\GitHub\workingtestv2\node_modules\express\lib\router\route.js:149:13)
+    at exports.protect (C:\Users\HP\Documents\GitHub\workingtestv2\middleware\authMiddleware.js:30:5)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
