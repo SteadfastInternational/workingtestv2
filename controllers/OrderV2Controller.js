@@ -69,24 +69,36 @@ class OrderController {
       cart.status = 'Completed';
       await cart.save({ session });
 
-      // Step 8: Notify user via email (with retry logic)
       let emailSent = false;
       let retries = 3;
       while (retries > 0 && !emailSent) {
         try {
+          // Check if cart.email is an object and extract email if necessary
+          let emailToSend = cart.email;
+          if (typeof cart.email === 'object' && cart.email.email) {
+            emailToSend = cart.email.email; // Extract the email if it's an object
+          }
+      
+          // Validate email format
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(emailToSend)) {
+            throw new Error(`Invalid email address provided: ${emailToSend}`);
+          }
+      
+          // Send email with retry logic
           const emailResponse = await sendEmail({
-            to: cart.email,
+            to: emailToSend,
             subject: 'Your Order Has Been Processed',
             body: `Dear ${cart.userFirstName} ${cart.userLastName},\n\nYour order has been successfully processed.\n\nTracking ID: ${trackingNumber}\n\nThank you for shopping with us.`,
           });
-
+      
           if (emailResponse.success) {
             logger.info(
-              `Order notification email sent to ${cart.userId.email} with Tracking ID ${trackingNumber}`
+              `Order notification email sent to ${emailToSend} with Tracking ID ${trackingNumber}`
             );
             emailSent = true;
           } else {
-            throw new Error(`Email service failed for user ${cart.userId.email}.`);
+            throw new Error(`Email service failed for user ${emailToSend}.`);
           }
         } catch (emailError) {
           retries--;
@@ -101,7 +113,7 @@ class OrderController {
           }
         }
       }
-
+      
       await session.commitTransaction(); // Commit transaction
       logger.info(`Order created for user ${userId} with Tracking ID: ${trackingNumber}`);
       return order;
