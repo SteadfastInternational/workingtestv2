@@ -431,22 +431,22 @@ const generateCartItemsHtml = async (items) => {
 
 /**
  * Sends a general email to the customer.
- * @param {string} recipient - Email recipient address.
+ * @param {string} userEmail - Email recipient address.
  * @param {string} subject - Email subject.
  * @param {string} htmlContent - HTML content of the email.
  */
-const sendEmail = async (recipient, subject, htmlContent) => {
+const sendEmail = async (userEmail, subject, htmlContent) => {
   try {
     const message = {
       from: sender,  // Use the sender object from mailtrap.js
-      to: [{ email: recipient }], // Wrap recipient in an array
+      to: [{ email: userEmail }], // Wrap recipient in an array
       subject,
       html: htmlContent,
     };
 
     // Send the email via Mailtrap
     await mailtrapClient.send(message);
-    logger.info(`Email sent to ${recipient} with subject: ${subject}`);
+    logger.info(`Email sent to ${userEmail} with subject: ${subject}`);
   } catch (error) {
     logger.error('Failed to send email', error);
   }
