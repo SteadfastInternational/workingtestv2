@@ -47,6 +47,10 @@ const initiatePayment = async (cartId, totalPrice, email, userName, formattedAdd
     throw new Error('Unable to initiate payment. Please try again.');
   }
 };
+
+
+
+
 /**
  * Processes the Paystack webhook logic.
  * @param {Buffer} rawBody - Raw request body as Buffer.
@@ -166,7 +170,7 @@ const verifyPaymentStatus = async (reference) => {
       headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` },
     });
 
-    const { status, message, data } = response.data;
+    const { status, data } = response.data;
     logger.debug('Paystack response:', response.data);
 
     if (status === 'success' && data?.status === 'success') {
@@ -174,7 +178,7 @@ const verifyPaymentStatus = async (reference) => {
       return 'success';
     }
 
-    logger.error(`Paystack transaction ${reference} verification failed: ${message}`);
+    logger.error(`Paystack transaction ${reference} verification failed: ${data?.message || 'Unknown error'}`);
     return 'failed';
   } catch (error) {
     logger.error('Error verifying Paystack payment status:', {
@@ -204,6 +208,7 @@ const isValidSignature = (rawBody, signature) => {
 
   return hash === signature;
 };
+
 
 /**
  * Processes successful payment event automatically.
