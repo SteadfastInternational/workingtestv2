@@ -20,7 +20,7 @@ const cartSchema = new mongoose.Schema(
     email: { type: String, required: true },
     paymentStatus: {
       type: String,
-      enum: ['Pending', 'Completed', 'paid', 'Failed', 'Refunded'],
+      enum: ['Pending', 'Completed', 'Paid', 'Failed', 'Refunded'],
       default: 'Pending',
     },
     items: [
