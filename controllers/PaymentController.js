@@ -367,7 +367,6 @@ const updateCartAndCreateOrder = async (metadata, amount, reference, userName) =
 
 
 
-
 /**
  * Sends an invoice email after successful payment.
  * @param {object} metadata - Metadata containing user and cart info.
@@ -392,7 +391,7 @@ const sendInvoiceEmail = async (metadata, amount, userName, userEmail) => {
       new Date()
     );
 
-    await sendEmail(userEmail, 'Payment Received - Invoice', emailHtml);
+    await sendEmail(userEmail, 'Payment Received - Invoice', emailHtml); // Send the email
     logger.info(`Invoice email sent to ${userName} at: ${userEmail}`);
   } catch (error) {
     logger.error(`Error sending invoice email to ${userName} at: ${userEmail}`, error);
@@ -430,15 +429,24 @@ const generateCartItemsHtml = async (items) => {
  */
 const sendEmail = async (recipient, subject, htmlContent) => {
   try {
-    await sendSuccessEmail({
-      recipient,
+    const message = {
+      from: {
+        email: 'no-reply@yourcompany.com',  // Set the sender email here
+        name: 'Your Company',  // Optional, add a sender name
+      },
+      to: recipient,
       subject,
-      htmlContent,
-    });
+      html: htmlContent,
+    };
+
+    // Assuming you have a mail client like Mailtrap configured as per the earlier code
+    await mailtrapClient.send(message);
+    logger.info(`Email sent to ${recipient} with subject: ${subject}`);
   } catch (error) {
     logger.error('Failed to send email', error);
   }
 };
+
 
 /**
  * Handle refund request from the user.
