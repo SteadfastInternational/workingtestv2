@@ -46,7 +46,7 @@ app.use(
     type: "application/json",
     verify: (req, res, buf) => {
       if (req.originalUrl.includes("/api/payment/paystack/webhook")) {
-        req.rawBody = buf.toString("utf8"); // Save raw body for signature verification
+        req.rawBody = buf; // Save raw body for signature verification
       }
     },
   })
