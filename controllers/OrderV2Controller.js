@@ -19,8 +19,8 @@ class OrderController {
       // Convert userId from string to ObjectId using 'new'
       const userObjectId = new mongoose.Types.ObjectId(userId);
 
-      // Step 1: Fetch the cart and validate
-      const cart = await CartModel.findOne({ _id: cartId, userId: userObjectId }).session(session);
+      // Step 1: Fetch the cart using cartId (which is a string, not ObjectId) and validate
+      const cart = await CartModel.findOne({ cartId: cartId, userId: userObjectId }).session(session);
       if (!cart) {
         logger.error(
           `User ${userId} failed to create order. Cart not found or does not belong to the user. Cart ID: ${cartId}`
@@ -43,7 +43,7 @@ class OrderController {
 
       // Step 4: Create the order
       const order = new OrderModel({
-        cartId: cart._id,
+        cartId: cart.cartId,  // Using cartId as a string
         userId: cart.userId,
         trackingId,
         orderStatus: 'Processed', // Initial status
@@ -68,7 +68,7 @@ class OrderController {
           const emailResponse = await sendEmail({
             to: cart.userId.email,
             subject: 'Your Order Has Been Processed',
-            body: `Dear ${cart.firstName} ${cart.lastName},\n\nYour order has been successfully processed.\n\nTracking ID: ${trackingId}\n\nThank you for shopping with us.`,
+            body: `Dear ${cart.userFirstName} ${cart.userLastName},\n\nYour order has been successfully processed.\n\nTracking ID: ${trackingId}\n\nThank you for shopping with us.`,
           });
 
           if (emailResponse.success) {
@@ -105,5 +105,6 @@ class OrderController {
     }
   }
 }
+
 
 module.exports = OrderController;
