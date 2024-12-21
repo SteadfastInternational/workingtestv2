@@ -231,7 +231,9 @@ const processPaymentSuccess = async (paymentData, userEmail) => {
   const userName = `${metadata?.firstName || 'Unknown'} ${metadata?.lastName || 'User'}`;
 
   try {
-    logInfo(`Verifying payment for ${userName} with reference: ${reference}`);
+    // Log the start of the payment verification process
+    logger.info(`Verifying payment for ${userName} with reference: ${reference}`);
+    
     const verificationResponse = await axios.get(
       `https://api.paystack.co/transaction/verify/${reference}`,
       { headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` } }
@@ -241,17 +243,30 @@ const processPaymentSuccess = async (paymentData, userEmail) => {
       throw new Error('Payment verification failed');
     }
 
-    logInfo(`Payment verification successful for ${userName} with reference: ${reference}`);
+    // Log successful payment verification
+    logger.info(`Payment verification successful for ${userName} with reference: ${reference}`);
+    
+    // Continue with updating cart and order
     await updateCartAndCreateOrder(metadata, amount, reference, userName);
-    await updateStockAfterPayment('paid', metadata.cartId); // Call the updateStock function after payment is confirmed
-    await sendSuccessEmail(metadata, amount, userName, userEmail); // Send success email with userEmail
+    await updateStockAfterPayment('paid', metadata.cartId); // Update stock
+    await sendSuccessEmail(metadata, amount, userName, userEmail); // Send success email
     await sendInvoiceEmail(metadata, amount, userName, userEmail); // Send invoice email after success
-    logInfo(`Payment success processing complete for ${userName}`);
+    
+    // Log the completion of payment processing
+    logger.info(`Payment success processing complete for ${userName}`);
+
   } catch (error) {
-    logError(`Error during payment processing for ${userName} with reference: ${reference}`, error);
-    await sendFailureEmail(metadata, amount, userName, userEmail); // Send failure email with userEmail
+    // Log error during payment processing
+    logger.error(`Error during payment processing for ${userName} with reference: ${reference}`, {
+      message: error.message,
+      stack: error.stack
+    });
+
+    // Send failure email if there is an error
+    await sendFailureEmail(metadata, amount, userName, userEmail); // Send failure email
   }
 };
+
 
 /**
  * Updates the cart and creates an order after successful payment.
