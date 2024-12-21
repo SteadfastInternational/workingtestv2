@@ -47,7 +47,6 @@ const initiatePayment = async (cartId, totalPrice, email, userName, formattedAdd
     throw new Error('Unable to initiate payment. Please try again.');
   }
 };
-const axios = require('axios'); // Make sure you have axios installed for making API requests
 
 /**
  * Processes the Paystack webhook logic.
