@@ -52,7 +52,7 @@ const initiatePayment = async (cartId, totalPrice, email, userName, formattedAdd
       {
         email,
         amount: totalPrice * 100, // Amount in kobo (100 kobo = 1 Naira)
-        metadata: { cartId, formattedAddress, userName, userId: userIdString,  cartItems: []}, // Ensure userId is a string
+        metadata: { cartId, formattedAddress, userName, email, userId: userIdString,  cartItems: []}, // Ensure userId is a string
       },
       { headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` } }
     );
@@ -291,7 +291,7 @@ const processPaymentSuccess = async (paymentData, userEmail) => {
     await sendPaymentSuccessEmail(userEmail, userName, amount); // Send success email
     await updateCartAndCreateOrder(metadata, amount, reference, userName); // Pass entire metadata
     await updateStockAfterPayment('paid', metadata.cartId); // Update stock
-    await sendInvoiceEmail(metadata, amount, userName, userEmail); // Send invoice email after success
+    await sendInvoiceEmail(metadata, amount, userName, metadata.email); // Send invoice email after success
 
     // Log the completion of payment processing
     logger.info(`Payment success processing complete for ${userName}`);
@@ -366,47 +366,45 @@ const updateCartAndCreateOrder = async (metadata, amount, reference, userName) =
 };
 
 
+
 /**
  * Sends an invoice email after successful payment.
  * @param {object} metadata - Metadata containing user and cart info.
  * @param {number} amount - Total payment amount.
  * @param {string} userName - Customer's full name.
- * @param {string} userEmail - Customer's email address.
+ * @param {string} metadata.email - Customer's email address.
  */
-const sendInvoiceEmail = async (metadata, amount, userEmail) => {
+const sendInvoiceEmail = async (metadata, amount, userName) => {
   try {
+    let userEmail = metadata.email; // Extract email from metadata
+
     // Log the userEmail to see its value before any checks or validation
     console.log("User email before validation:", userEmail);
 
-    // Ensure userEmail is a string
-    if (typeof userEmail === 'object' && userEmail.email) {
-      userEmail = userEmail.email;  // Extract email if it's an object
-    }
-
-    // Validate email type and format
+    // Ensure userEmail is a string and validate the email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (typeof userEmail !== 'string' || !emailRegex.test(userEmail)) {
       throw new Error(`Invalid email address provided: ${userEmail}`);
     }
 
     // Log the invoice generation
-    console.log(`Preparing invoice email for ${metadata.userName || 'Unknown User'}, CartID: ${metadata.cartId}`);
+    console.log(`Preparing invoice email for ${userName || 'Unknown User'}, CartID: ${metadata.cartId}`);
 
     // Ensure cartItems is an array before passing it to the function
     const cartItems = Array.isArray(metadata.cartItems) ? metadata.cartItems : [];
-    
+
     // Generate the cart items HTML
     const cartItemsHtml = await generateCartItemsHtml(cartItems);
 
     // Generate the invoice HTML using the template and replace placeholders
     const invoiceHtml = invoiceTemplate
-      .replace('{{name}}', metadata.userName || 'Unknown User')
+      .replace('{{name}}', userName || 'Unknown User')
       .replace('{{formattedAddress}}', metadata.formattedAddress || 'No address provided')
       .replace('{{email}}', userEmail)
       .replace('{{sanitizedCartItemsHtml}}', cartItemsHtml)
       .replace('{{totalAmount}}', amount && !isNaN(amount) ? amount.toFixed(2) : '0.00');
 
-    // Send the email
+    // Send the email, passing userEmail as the recipient
     await sendEmail(userEmail, subject , invoiceHtml);
 
     console.log(`Invoice email sent to ${userEmail}`);
@@ -416,6 +414,7 @@ const sendInvoiceEmail = async (metadata, amount, userEmail) => {
     throw new Error(`Error sending invoice email: ${error.message || error}`);
   }
 };
+
 
 
 // Function to fetch cart items by cartId (simulating database fetch)
