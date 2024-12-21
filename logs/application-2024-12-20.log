@@ -74,3 +74,20 @@
     at Function.process_params (C:\Users\HP\Documents\GitHub\workingtestv2\node_modules\express\lib\router\index.js:346:12)
     at next (C:\Users\HP\Documents\GitHub\workingtestv2\node_modules\express\lib\router\index.js:280:10)
     at Function.handle (C:\Users\HP\Documents\GitHub\workingtestv2\node_modules\express\lib\router\index.js:175:3)
+2024-12-20 21:55:05 [INFO]: Initiating payment for Miracle Emmanuel. CartID: 7b00623f-3b9c-453f-82dc-a49ea0322f4f, Amount: ₦5405.4, Email: officialmico500@gmail.com
+2024-12-20 21:55:06 [INFO]: Payment URL generated successfully for Miracle Emmanuel: https://checkout.paystack.com/zgset46jbite9ch
+2024-12-20 22:34:52 [INFO]: Initiating payment for Miracle Emmanuel. CartID: e209cb9c-9e3c-4662-ba73-261c213ea86a, Amount: ₦5405.4, Email: officialmico500@gmail.com
+2024-12-20 22:34:53 [INFO]: Payment URL generated successfully for Miracle Emmanuel: https://checkout.paystack.com/6iuhujnn1epoo5w
+2024-12-20 22:35:53 [INFO]: Received Paystack webhook with event: undefined
+2024-12-20 22:35:53 [ERROR]: Webhook signature mismatch
+2024-12-20 22:35:53 [ERROR]: Error: Unauthorized
+    at handleWebhook (C:\Users\HP\Documents\GitHub\workingtestv2\controllers\PaymentController.js:62:11)
+    at C:\Users\HP\Documents\GitHub\workingtestv2\routes\PaymentRoutes.js:35:11
+    at Layer.handle [as handle_request] (C:\Users\HP\Documents\GitHub\workingtestv2\node_modules\express\lib\router\layer.js:95:5)
+    at next (C:\Users\HP\Documents\GitHub\workingtestv2\node_modules\express\lib\router\route.js:149:13)
+    at Route.dispatch (C:\Users\HP\Documents\GitHub\workingtestv2\node_modules\express\lib\router\route.js:119:3)
+    at Layer.handle [as handle_request] (C:\Users\HP\Documents\GitHub\workingtestv2\node_modules\express\lib\router\layer.js:95:5)
+    at C:\Users\HP\Documents\GitHub\workingtestv2\node_modules\express\lib\router\index.js:284:15
+    at Function.process_params (C:\Users\HP\Documents\GitHub\workingtestv2\node_modules\express\lib\router\index.js:346:12)
+    at next (C:\Users\HP\Documents\GitHub\workingtestv2\node_modules\express\lib\router\index.js:280:10)
+    at Function.handle (C:\Users\HP\Documents\GitHub\workingtestv2\node_modules\express\lib\router\index.js:175:3)
