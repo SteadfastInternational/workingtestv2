@@ -263,7 +263,7 @@ const processPaymentSuccess = async (paymentData, userEmail) => {
     }
 
     // Log successful payment verification
-    logger.info(`Payment verification successful for ${userName} with reference: ${reference}`);
+    logger.info(`Payment verification successful for ${userEmail} with reference: ${reference}`);
 
     await sendPaymentSuccessEmail(metadata, amount, userName, userEmail); // Send success email
     await updateCartAndCreateOrder(metadata, amount, reference, userName);
