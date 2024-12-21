@@ -34,7 +34,7 @@ const initiatePayment = async (cartId, totalPrice, email, userName, formattedAdd
       {
         email,
         amount: totalPrice * 100, // Amount in kobo (100 kobo = 1 Naira)
-        metadata: { cartId, formattedAddress },
+        metadata: { cartId, formattedAddress, userName },
       },
       { headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` } }
     );
@@ -267,7 +267,7 @@ const processPaymentSuccess = async (paymentData, userEmail) => {
 
     // Pass userEmail as a string to the email functions
     await sendPaymentSuccessEmail(userEmail, userName, amount); // Send success email
-    await updateCartAndCreateOrder(metadata, amount, reference, userName);
+    await updateCartAndCreateOrder(metadata.cartId, amount, reference,);
     await updateStockAfterPayment('paid', metadata.cartId); // Update stock
     await sendInvoiceEmail(userEmail, amount, userName); // Send invoice email after success
 
@@ -309,7 +309,7 @@ const updateCartAndCreateOrder = async (metadata, amount, reference, userName) =
     );
 
     // Pass the correct arguments (cartId and userId) to createOrder
-    await OrderController.createOrder(metadata.cartId, metadata.userId);
+    await OrderController.createOrder(metadata.cartId, userName);
 
     logger.info(`Order created successfully for ${userName} with CartID: ${metadata.cartId}`);
   } catch (error) {

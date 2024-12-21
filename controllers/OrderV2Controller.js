@@ -8,26 +8,26 @@ class OrderController {
   /**
    * Create an order from a cart
    * @param {String} cartId - ID of the cart
-   * @param {String} userId - ID of the user
+   * @param {String} userName - Name of the user
    * @returns {Object} - Created order
    */
-  static async createOrder(cartId, userId) {
+  static async createOrder(cartId, userName) {
     const session = await mongoose.startSession(); // Start a session for transactions
     session.startTransaction();
 
     try {
       // Step 1: Fetch the cart and validate
-      const cart = await CartModel.findOne({ _id: cartId, userId }).session(session);
+      const cart = await CartModel.findOne({ _id: cartId, userName }).session(session);
       if (!cart) {
         logger.error(
-          `User ${userId} failed to create order. Cart not found or does not belong to the user. Cart ID: ${cartId}`
+          `User ${userName} failed to create order. Cart not found or does not belong to the user. Cart ID: ${cartId}`
         );
         throw new Error('Cart not found or does not belong to the user.');
       }
 
       if (cart.status === 'Completed') {
         logger.error(
-          `User ${userId} attempted to create an order with an already completed cart. Cart ID: ${cartId}`
+          `User ${userName} attempted to create an order with an already completed cart. Cart ID: ${cartId}`
         );
         throw new Error('Order has already been created for this cart.');
       }
@@ -41,7 +41,7 @@ class OrderController {
       // Step 4: Create the order
       const order = new OrderModel({
         cartId: cart._id,
-        userId: cart.userId,
+        userName: cart.userName, // Updated reference to userName
         trackingId,
         orderStatus: 'Processed', // Initial status
         paymentReference: cart.paymentReference,
@@ -63,38 +63,38 @@ class OrderController {
       while (retries > 0 && !emailSent) {
         try {
           const emailResponse = await sendEmail({
-            to: cart.userId.email,
+            to: cart.userName.email, // Assuming userName now contains email as well
             subject: 'Your Order Has Been Processed',
             body: `Dear ${cart.firstName} ${cart.lastName},\n\nYour order has been successfully processed.\n\nTracking ID: ${trackingId}\n\nThank you for shopping with us.`,
           });
 
           if (emailResponse.success) {
             logger.info(
-              `Order notification email sent to ${cart.userId.email} with Tracking ID ${trackingId}`
+              `Order notification email sent to ${cart.userName.email} with Tracking ID ${trackingId}`
             );
             emailSent = true;
           } else {
-            throw new Error(`Email service failed for user ${cart.userId.email}.`);
+            throw new Error(`Email service failed for user ${cart.userName.email}.`);
           }
         } catch (emailError) {
           retries--;
           logger.error(
-            `Email sending failed on attempt ${4 - retries} for user ${cart.userId.email}: ${emailError.message}`
+            `Email sending failed on attempt ${4 - retries} for user ${cart.userName.email}: ${emailError.message}`
           );
           if (retries === 0) {
             // If all retries fail, log and proceed with order creation
             logger.error(
-              `Failed to send order notification email to ${cart.userId.email} after 3 attempts.`
+              `Failed to send order notification email to ${cart.userName.email} after 3 attempts.`
             );
           }
         }
       }
 
       await session.commitTransaction(); // Commit transaction
-      logger.info(`Order created for user ${userId} with Tracking ID: ${trackingId}`);
+      logger.info(`Order created for user ${userName} with Tracking ID: ${trackingId}`);
       return order;
     } catch (error) {
-      logger.error(`Error creating order for user ${userId}: ${error.message}`);
+      logger.error(`Error creating order for user ${userName}: ${error.message}`);
       await session.abortTransaction(); // Rollback on failure
       throw new Error('Failed to create order. Please try again.');
     } finally {
@@ -102,7 +102,5 @@ class OrderController {
     }
   }
 }
-
-
 
 module.exports = OrderController;

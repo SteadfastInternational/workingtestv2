@@ -1,4 +1,4 @@
-const Joi = require('joi'); 
+const Joi = require('joi');
 const mongoose = require('mongoose');
 
 // Order schema definition
@@ -14,10 +14,9 @@ const orderSchema = new mongoose.Schema(
       required: true,
       unique: true, // Ensures tracking number is unique
     },
-    userId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User', // References the User model
-      required: true,
+    userName: {
+      type: String,
+      required: true, // Changed to userName instead of userId
     },
     items: [
       {
