@@ -9,8 +9,8 @@ const logger = require('../utils/logger');
  */
 const sendEmail = async (userEmail, subject = 'Payment Received - Invoice', htmlContent) => {
   try {
-    // Log the email details before entering the function
-    logger.info(`Attempting to send email to: ${userEmail} with subject: ${subject}`);
+    // Log the user email being received
+    logger.info(`Received userEmail: ${JSON.stringify(userEmail)}`);
 
     // If userEmail is an object, try to extract the 'email' property
     if (typeof userEmail === 'object' && userEmail.email) {
