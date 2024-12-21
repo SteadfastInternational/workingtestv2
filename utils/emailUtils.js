@@ -1,3 +1,7 @@
+// utils/emailUtils.js
+const { mailtrapClient, sender } = require('../mailtrap/mailtrap.config');
+const logger = require('../utils/logger');
+
 /**
  * Sends a general email to the customer.
  * @param {string} userEmail - Email recipient address.
@@ -35,6 +39,5 @@ const sendEmail = async (userEmail, subject, htmlContent) => {
     throw new Error(`Email sending failed: ${error.message}`);
   }
 };
-
 
 module.exports = { sendEmail };
