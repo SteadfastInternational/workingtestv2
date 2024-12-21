@@ -265,7 +265,7 @@ const WELCOME_EMAIL_TEMPLATE = `
 `;
 
 // Template for the payment success email
-const PAYMENT_SUCCESS_TEMPLATE = (userName, totalPrice) => `
+const PAYMENT_SUCCESS_TEMPLATE = (userName, amount) => `
   <html>
     <head>
       <style>
@@ -320,7 +320,7 @@ const PAYMENT_SUCCESS_TEMPLATE = (userName, totalPrice) => `
         </div>
         <div class="email-body">
           <p>Hello ${userName},</p>
-          <p>Thank you for your payment of <strong>₦${(totalPrice / 100).toFixed(2)}</strong>! 🎉 Your order is being processed and will be fulfilled shortly.</p>
+          <p>Thank you for your payment of <strong>₦${(amount / 100).toFixed(2)}</strong>! 🎉 Your order is being processed and will be fulfilled shortly.</p>
           <p>If you have any questions, feel free to reach out to our support team. 💬</p>
         </div>
         <div class="email-footer">
@@ -333,7 +333,7 @@ const PAYMENT_SUCCESS_TEMPLATE = (userName, totalPrice) => `
 `;
 
 // Template for payment failure email
-const PAYMENT_FAILURE_TEMPLATE = (userName, totalPrice) => `
+const PAYMENT_FAILURE_TEMPLATE = (userName, amount) => `
   <html>
     <head>
       <style>
@@ -388,7 +388,7 @@ const PAYMENT_FAILURE_TEMPLATE = (userName, totalPrice) => `
         </div>
         <div class="email-body">
           <p>Hello ${userName},</p>
-          <p>We regret to inform you that your payment of <strong>₦${(totalPrice / 100).toFixed(2)}</strong> was unsuccessful. 😞 Please check your payment method and try again.</p>
+          <p>We regret to inform you that your payment of <strong>₦${(amount / 100).toFixed(2)}</strong> was unsuccessful. 😞 Please check your payment method and try again.</p>
           <p>If you need assistance, feel free to reach out to our support team. 💬</p>
         </div>
         <div class="email-footer">

@@ -89,14 +89,20 @@ const sendWelcomeEmail = async (email, firstName) => {
 /**
  * Function to send payment success email
  * @param {string} email - The recipient's email address.
- * @param {string} firstName - The user's first name.
+ * @param {string} userName - The user's first name.
  * @param {number} amount - The amount paid.
  */
-const sendPaymentSuccessEmail = async (email, firstName, amount) => {
+const sendPaymentSuccessEmail = async (email, userName, amount) => {
   const recipient = [{ email }];
+
+   // Check if PAYMENT_FAILURE_TEMPLATE is a valid string
+   if (typeof PAYMENT_SUCCESS_TEMPLATE !== 'string') {
+    throw new Error("Payment success email template is not defined correctly.");
+  }
+
   try {
     // Replace placeholder in the template with dynamic values
-    const emailBody = PAYMENT_SUCCESS_TEMPLATE.replace("{firstName}", firstName)
+    const emailBody = PAYMENT_SUCCESS_TEMPLATE.replace("{firstName}", userName)
                                               .replace("{amount}", amount.toFixed(2));
 
     // Send payment success email using Mailtrap client
