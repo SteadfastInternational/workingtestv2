@@ -285,7 +285,6 @@ const processPaymentSuccess = async (paymentData, userEmail) => {
 };
 
 
-
 /**
  * Updates the cart and creates an order after successful payment.
  * @param {object} metadata - Metadata containing cart details.
@@ -295,9 +294,13 @@ const processPaymentSuccess = async (paymentData, userEmail) => {
  * @param {string} userId - Customer's unique identifier from metadata.
  */
 const updateCartAndCreateOrder = async (metadata, amount, reference, userName) => {
-  const { userId, cartId } = metadata;  // Extract userId and cartId from metadata
+  let { userId, cartId } = metadata;  // Extract userId and cartId from metadata
 
   try {
+    // Ensure userId and cartId are strings
+    userId = String(userId);
+    cartId = String(cartId);
+
     logger.info(`Updating cart and creating order for ${userName}. CartID: ${cartId}`);
 
     // Update the cart payment status and reference
@@ -318,6 +321,7 @@ const updateCartAndCreateOrder = async (metadata, amount, reference, userName) =
     throw new Error('Order processing failed.');
   }
 };
+
 
 
 
