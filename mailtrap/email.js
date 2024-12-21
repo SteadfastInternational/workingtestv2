@@ -86,6 +86,8 @@ const sendWelcomeEmail = async (email, firstName) => {
   }
 };
 
+
+
 /**
  * Function to send payment success email
  * @param {string} email - The recipient's email address.
@@ -93,7 +95,8 @@ const sendWelcomeEmail = async (email, firstName) => {
  * @param {number} amount - The amount paid.
  */
 const sendPaymentSuccessEmail = async (email, userName, amount) => {
-  const recipient = [{ email }];
+  // Ensure the email is a string and not wrapped in an object
+  const recipient = email;
 
   // Ensure PAYMENT_SUCCESS_TEMPLATE is a function and is called with the proper arguments
   if (typeof PAYMENT_SUCCESS_TEMPLATE !== 'function') {
@@ -107,7 +110,7 @@ const sendPaymentSuccessEmail = async (email, userName, amount) => {
     // Send payment success email using Mailtrap client
     const response = await mailtrapClient.send({
       from: sender,
-      to: recipient,
+      to: recipient,  // Pass the email as a string
       subject: "Payment Successful",
       html: emailBody,
       category: "Payment",
@@ -120,8 +123,19 @@ const sendPaymentSuccessEmail = async (email, userName, amount) => {
   }
 };
 
-const sendPaymentFailureEmail = async (email, userName, amount) => {
-  const recipient = [{ email }];
+
+
+/**
+ * Function to send payment success email
+ * @param {string} email - The recipient's email address.
+ * @param {string} userName - The user's first name.
+ * @param {number} amount - The amount paid.
+ */
+
+
+const sendPaymentFailureEmail = async (email, firstName, amount) => {
+  // Ensure the email is a string and not wrapped in an object
+  const recipient = email;
 
   // Ensure PAYMENT_FAILURE_TEMPLATE is a function and is called with proper arguments
   if (typeof PAYMENT_FAILURE_TEMPLATE !== 'function') {
@@ -130,12 +144,12 @@ const sendPaymentFailureEmail = async (email, userName, amount) => {
 
   try {
     // Generate the email body by calling the template function with necessary arguments
-    const emailBody = PAYMENT_FAILURE_TEMPLATE(userName, amount);
+    const emailBody = PAYMENT_FAILURE_TEMPLATE(firstName, amount);
 
     // Send payment failure email using Mailtrap client
     const response = await mailtrapClient.send({
       from: sender,
-      to: recipient,
+      to: recipient,  // Pass the email as a string
       subject: "Payment Failed",
       html: emailBody,
       category: "Payment",
