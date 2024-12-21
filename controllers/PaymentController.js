@@ -419,6 +419,9 @@ const sendInvoiceEmail = async (metadata, amount, userName, userEmail) => {
       .replace('{{sanitizedCartItemsHtml}}', cartItemsHtml)
       .replace('{{totalAmount}}', amount.toFixed(2)); // Format amount to two decimal places
 
+    // Log email right before sending
+    console.log("Sending email to:", userEmail);
+
     // Send the email
     await sendEmail(userEmail, 'Payment Received - Invoice', invoiceHtml);
 
@@ -427,6 +430,24 @@ const sendInvoiceEmail = async (metadata, amount, userName, userEmail) => {
     logger.error(`Error sending invoice email to ${userName || 'Unknown User'} at: ${userEmail}`, error);
     throw new Error(`Error sending invoice email: ${error.message || error}`);
   }
+};
+
+
+const generateCartItemsHtml = async (items) => {
+  let cartItemsHtml = '';
+  for (const item of items) {
+    const productImage = item.image || 'https://via.placeholder.com/80'; // Use item.image if available
+    cartItemsHtml += `
+      <tr>
+        <td><img src="${productImage}" alt="${item.productName}" width="80" /></td>
+        <td>${item.productName}</td>
+        <td>${item.quantity}</td>
+        <td>₦${item.price.toFixed(2)}</td>
+        <td>₦${(item.quantity * item.price).toFixed(2)}</td>
+      </tr>
+    `;
+  }
+  return cartItemsHtml;
 };
 
 
