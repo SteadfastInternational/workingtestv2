@@ -459,7 +459,7 @@ const generateCartItemsHtml = async (items) => {
 const sendEmail = async (userEmail, subject, htmlContent) => {
   try {
     // Ensure recipient is in the correct format
-    const recipient = [{ email: userEmail }];
+    const recipient = [{ email: String(userEmail) }];
 
     const message = {
       from: sender, // Use the sender object from mailtrap.js
