@@ -1,8 +1,12 @@
 const express = require('express');
+const crypto = require('crypto'); // For HMAC signature validation
 const router = express.Router();
 const { initiatePayment, handleWebhook, processRefund } = require('../controllers/PaymentController');
 const isAdmin = require('../middleware/adminMiddleware');
 const logger = require('../utils/logger');
+
+// Paystack Webhook Secret from environment variables
+const PAYSTACK_WEBHOOK_SECRET = process.env.PAYSTACK_WEBHOOK_SECRET;
 
 // Route to initiate payment
 router.post('/paystack/initiate', async (req, res) => {
@@ -26,14 +30,34 @@ router.post('/paystack/initiate', async (req, res) => {
 });
 
 // Paystack Webhook route to handle payment events
-
-router.post('/paystack/webhook', async (req, res) => {
+router.post('/paystack/webhook', express.json({
+  verify: (req, res, buf) => {
+    // Save raw body for signature verification
+    if (req.originalUrl.includes('/paystack/webhook')) {
+      req.rawBody = buf.toString('utf8');
+    }
+  },
+}), async (req, res) => {
   try {
-    // Log the incoming request
-    logger.info('Received Paystack webhook event');
+    // Extract the signature from headers
+    const signature = req.headers['x-paystack-signature'];
 
-    // Process the webhook with the raw body and headers
-    await handleWebhook(req.body, req.headers);
+    // Validate the signature using HMAC
+    const hash = crypto
+      .createHmac('sha512', PAYSTACK_WEBHOOK_SECRET)
+      .update(req.rawBody, 'utf8')
+      .digest('hex');
+
+    if (hash !== signature) {
+      logger.warn('Invalid Paystack webhook signature');
+      return res.status(401).send('Unauthorized');
+    }
+
+    // Log the incoming request
+    logger.info('Verified Paystack webhook event');
+
+    // Process the webhook with the parsed body
+    await handleWebhook(req.body);
 
     // Acknowledge receipt with a 200 status
     res.sendStatus(200);
@@ -43,8 +67,8 @@ router.post('/paystack/webhook', async (req, res) => {
       stack: error.stack,
     });
 
-    // Respond with a 401 status and error message
-    res.status(401).send(error.message || 'Unauthorized');
+    // Respond with a 500 status and error message
+    res.status(500).send(error.message || 'Error processing webhook');
   }
 });
 

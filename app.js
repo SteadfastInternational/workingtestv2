@@ -2,7 +2,7 @@ const express = require("express");
 const dotenv = require("dotenv");
 const connectDB = require("./config/db");
 const cors = require("cors");
-const bodyParser = require("body-parser"); // For raw body parsing
+const crypto = require("crypto"); // For HMAC signature validation
 
 // Import Routes
 const productRoutes = require("./routes/productRoutes");
@@ -14,7 +14,7 @@ const blogRoutes = require("./routes/blogRoutes");
 const authRoutes = require("./routes/authRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const cartRoutes = require("./routes/cartRoutes");
-const couponRoutes = require('./routes/couponRoutes');
+const couponRoutes = require("./routes/couponRoutes");
 
 // Middleware
 const errorHandler = require("./middleware/errorMiddleware");
@@ -29,18 +29,27 @@ const app = express();
 
 // Configure CORS
 const corsOptions = {
-  origin: process.env.CLIENT_URL || 'https://www.steadfast.ng', // Use environment variable for flexibility
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  origin: process.env.CLIENT_URL || "https://www.steadfast.ng", // Use environment variable for flexibility
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"],
 };
 app.use(cors(corsOptions));
 
-// Middleware to parse JSON bodies
+// Middleware for JSON and URL-encoded bodies
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Specific raw body parser for Paystack webhook (before webhook route)
-app.use("/api/payment/paystack/webhook", bodyParser.raw({ type: "application/json" }));
+// Specific raw body parser for Paystack webhook
+app.use(
+  "/api/payment/paystack/webhook",
+  express.json({
+    verify: (req, res, buf) => {
+      if (req.originalUrl.includes("/api/payment/paystack/webhook")) {
+        req.rawBody = buf.toString("utf8"); // Save raw body for signature verification
+      }
+    },
+  })
+);
 
 // Logging Middleware for Debugging (only in development mode)
 if (process.env.NODE_ENV === "development") {
@@ -49,6 +58,7 @@ if (process.env.NODE_ENV === "development") {
     next();
   });
 }
+
 
 // Routes
 app.use("/api/products", productRoutes); // Product routes
@@ -61,7 +71,7 @@ app.use("/api/blogs", blogRoutes); // Blog routes
 app.use("/api/auth", authRoutes); // Authentication routes
 app.use("/api/admin", adminRoutes); // Admin routes
 app.use("/api", cartRoutes); // Cart routes
-app.use('/coupons', couponRoutes); // Coupon Fetching Routes
+app.use("/coupons", couponRoutes); // Coupon Fetching Routes
 
 // 404 Error Middleware for Undefined Routes
 app.use((req, res) => {
