@@ -52,7 +52,7 @@ const initiatePayment = async (cartId, totalPrice, email, userName, formattedAdd
       {
         email,
         amount: totalPrice * 100, // Amount in kobo (100 kobo = 1 Naira)
-        metadata: { cartId, formattedAddress, userName, userId: userIdString }, // Ensure userId is a string
+        metadata: { cartId, formattedAddress, userName, userId: userIdString,  cartItems: []}, // Ensure userId is a string
       },
       { headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` } }
     );
@@ -378,9 +378,9 @@ const sendInvoiceEmail = async (metadata, amount, userEmail) => {
     // Log the userEmail to see its value before any checks or validation
     console.log("User email before validation:", userEmail);
 
-    // Extract email from object if necessary and validate the email format
+    // Ensure userEmail is a string
     if (typeof userEmail === 'object' && userEmail.email) {
-      userEmail = userEmail.email;
+      userEmail = userEmail.email;  // Extract email if it's an object
     }
 
     // Validate email type and format
@@ -416,6 +416,7 @@ const sendInvoiceEmail = async (metadata, amount, userEmail) => {
     throw new Error(`Error sending invoice email: ${error.message || error}`);
   }
 };
+
 
 // Function to fetch cart items by cartId (simulating database fetch)
 const generateCartItemsHtml = async (items) => {
