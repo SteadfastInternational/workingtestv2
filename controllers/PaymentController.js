@@ -7,6 +7,9 @@ const { sendPaymentSuccessEmail, sendPaymentFailureEmail } = require('../mailtra
 const logger = require('../utils/logger');
 const generateInvoiceHtml = require('../templates/invoiceTemplate');
 const { updateStockAfterPayment } = require('./cartV2Controller'); // Import the stock update function
+const { mailtrapClient, sender } = require('../mailtrap/mailtrap.config'); 
+
+
 
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 const PAYSTACK_WEBHOOK_SECRET = process.env.PAYSTACK_WEBHOOK_SECRET;
@@ -387,7 +390,7 @@ const sendInvoiceEmail = async (metadata, amount, userName, userEmail) => {
     // Generate HTML content for cart items
     const cartItemsHtml = await generateCartItemsHtml(cart.items);
     
-    // Replace placeholders in the template with actual data
+    // Generate invoice HTML with dynamically populated placeholders
     const invoiceHtml = generateInvoiceHtml
       .replace('{{name}}', userName || 'Unknown User')
       .replace('{{formattedAddress}}', metadata.formattedAddress || 'No address provided')
@@ -436,7 +439,7 @@ const sendEmail = async (recipient, subject, htmlContent) => {
   try {
     const message = {
       from: sender,  // Use the sender object from mailtrap.js
-      to: recipient,
+      to: [recipient],  // Wrap recipient in an array
       subject,
       html: htmlContent,
     };
@@ -448,6 +451,7 @@ const sendEmail = async (recipient, subject, htmlContent) => {
     logger.error('Failed to send email', error);
   }
 };
+
 
 
 
