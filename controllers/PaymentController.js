@@ -280,6 +280,7 @@ const updateCartAndCreateOrder = async (metadata, amount, reference, userName) =
   try {
     logger.info(`Updating cart and creating order for ${userName}. CartID: ${metadata.cartId}`);
 
+    // Update the cart payment status and reference
     await CartModel.updateOne(
       { cartId: metadata.cartId },
       {
@@ -288,23 +289,16 @@ const updateCartAndCreateOrder = async (metadata, amount, reference, userName) =
       }
     );
 
-    const orderDetails = {
-      userId: metadata.userId,
-      items: metadata.items,
-      address: metadata.formattedAddress,
-      totalPrice: amount / 100, // Convert Kobo to Naira
-      paymentReference: reference,
-      paymentStatus: 'Paid',
-      cartId: metadata.cartId,
-    };
+    // Pass the correct arguments (cartId and userId) to createOrder
+    await OrderController.createOrder(metadata.cartId, metadata.userId);
 
-    await OrderController.createOrder(orderDetails);
     logger.info(`Order created successfully for ${userName} with CartID: ${metadata.cartId}`);
   } catch (error) {
     logger.error(`Failed to update cart or create order for ${userName} - CartID: ${metadata.cartId}`, error);
     throw new Error('Order processing failed.');
   }
 };
+
 
 /**
  * Sends an invoice email after successful payment.
