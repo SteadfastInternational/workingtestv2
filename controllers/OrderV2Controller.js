@@ -1,4 +1,10 @@
+const OrderModel = require('../models/Order');
+const CartModel = require('../models/cart');
+const { sendEmail } = require('../utils/emailUtils'); // Assuming utility exists
+const mongoose = require('mongoose');
+const logger = require('../utils/logger'); // Assuming a logger utility exists
 const { v4: uuidv4 } = require('uuid');  // Importing uuid
+
 
 class OrderController {
   /**
