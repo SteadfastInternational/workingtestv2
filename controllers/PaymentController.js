@@ -439,7 +439,7 @@ const sendEmail = async (recipient, subject, htmlContent) => {
   try {
     const message = {
       from: sender,  // Use the sender object from mailtrap.js
-      to: [recipient],  // Wrap recipient in an array
+      to: [{ email: recipient }], // Wrap recipient in an array
       subject,
       html: htmlContent,
     };
