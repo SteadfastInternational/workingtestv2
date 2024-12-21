@@ -34,6 +34,8 @@ router.post('/paystack/initiate', async (req, res) => {
 });
 
 
+router.use('/paystack/webhook', bodyParser.raw({ type: 'application/json' }));
+
 // Webhook route handler
 router.post('/paystack/webhook', async (req, res) => {
   try {
@@ -42,11 +44,14 @@ router.post('/paystack/webhook', async (req, res) => {
       return res.status(400).send('No signature found');
     }
 
-    // Verify the Paystack webhook signature
-    handleWebhook(req.rawBody, signature);
+    // Log the raw body for debugging
+    logger.debug('Raw webhook body:', req.rawBody.toString());
 
-    // Proceed with the rest of the webhook processing (e.g., updating database, etc.)
-    res.sendStatus(200); // Acknowledge receipt of the webhook
+    // Verify and process the Paystack webhook signature and event
+    await handleWebhook(req.rawBody, req.headers);
+
+    // Acknowledge receipt of the webhook
+    res.sendStatus(200); // Respond with 200 OK after processing
   } catch (error) {
     logger.error('Error processing Paystack webhook:', error.message);
     res.status(400).send('Webhook signature verification failed');

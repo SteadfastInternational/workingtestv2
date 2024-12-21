@@ -105,6 +105,11 @@ const handleWebhook = async (rawBody, headers) => {
   }
 };
 
+/**
+ * Extracts user metadata from the Paystack event.
+ * @param {object} event - The Paystack webhook event.
+ * @returns {object} - An object containing the user's name and email.
+ */
 const extractUserMetadata = (event) => {
   try {
     return {
@@ -120,6 +125,12 @@ const extractUserMetadata = (event) => {
   }
 };
 
+/**
+ * Handles the successful payment (charge.success) event.
+ * @param {object} event - The Paystack event data.
+ * @param {string} userName - The user's name.
+ * @param {string} userEmail - The user's email.
+ */
 const handleChargeSuccess = async (event, userName, userEmail) => {
   const reference = event.data.reference;
   logger.info(`Received charge.success event for ${userName} with reference: ${reference}`);
@@ -143,6 +154,11 @@ const handleChargeSuccess = async (event, userName, userEmail) => {
   }
 };
 
+/**
+ * Verifies the payment status from Paystack API.
+ * @param {string} reference - The payment reference.
+ * @returns {string} - The payment status.
+ */
 const verifyPaymentStatus = async (reference) => {
   logger.debug('Verifying payment status for reference:', reference);
   try {
@@ -167,6 +183,12 @@ const verifyPaymentStatus = async (reference) => {
   }
 };
 
+/**
+ * Validates the Paystack webhook signature.
+ * @param {Buffer} rawBody - Raw request body.
+ * @param {string} signature - The signature from the Paystack headers.
+ * @returns {boolean} - Whether the signature is valid.
+ */
 const isValidSignature = (rawBody, signature) => {
   logger.debug('Validating webhook signature');
   const hash = crypto
@@ -178,7 +200,7 @@ const isValidSignature = (rawBody, signature) => {
   logger.debug('Provided signature:', signature);
 
   return hash === signature;
-};
+}
 
 /**
  * Processes successful payment event automatically.
