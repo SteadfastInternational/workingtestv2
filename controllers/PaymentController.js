@@ -268,6 +268,8 @@ const processPaymentSuccess = async (paymentData, userEmail) => {
 };
 
 
+const logger = require('./logger'); // Assuming logger is in a separate module
+
 /**
  * Updates the cart and creates an order after successful payment.
  * @param {object} metadata - Metadata containing cart details.
@@ -277,7 +279,7 @@ const processPaymentSuccess = async (paymentData, userEmail) => {
  */
 const updateCartAndCreateOrder = async (metadata, amount, reference, userName) => {
   try {
-    logInfo(`Updating cart and creating order for ${userName}. CartID: ${metadata.cartId}`);
+    logger.info(`Updating cart and creating order for ${userName}. CartID: ${metadata.cartId}`);
 
     await CartModel.updateOne(
       { cartId: metadata.cartId },
@@ -298,9 +300,9 @@ const updateCartAndCreateOrder = async (metadata, amount, reference, userName) =
     };
 
     await OrderController.createOrder(orderDetails);
-    logInfo(`Order created successfully for ${userName} with CartID: ${metadata.cartId}`);
+    logger.info(`Order created successfully for ${userName} with CartID: ${metadata.cartId}`);
   } catch (error) {
-    logError(`Failed to update cart or create order for ${userName} - CartID: ${metadata.cartId}`, error);
+    logger.error(`Failed to update cart or create order for ${userName} - CartID: ${metadata.cartId}`, error);
     throw new Error('Order processing failed.');
   }
 };
@@ -314,7 +316,7 @@ const updateCartAndCreateOrder = async (metadata, amount, reference, userName) =
  */
 const sendInvoiceEmail = async (metadata, amount, userName, userEmail) => {
   try {
-    logInfo(`Preparing invoice email for ${userName}, CartID: ${metadata.cartId}`);
+    logger.info(`Preparing invoice email for ${userName}, CartID: ${metadata.cartId}`);
 
     const cartItemsHtml = await generateCartItemsHtml(metadata.items);
     const emailHtml = generateInvoiceHtml(
@@ -330,9 +332,9 @@ const sendInvoiceEmail = async (metadata, amount, userName, userEmail) => {
     );
 
     await sendEmail(userEmail, 'Payment Received - Invoice', emailHtml);
-    logInfo(`Invoice email sent to ${userName} at: ${userEmail}`);
+    logger.info(`Invoice email sent to ${userName} at: ${userEmail}`);
   } catch (error) {
-    logError(`Error sending invoice email to ${userName} at: ${userEmail}`, error);
+    logger.error(`Error sending invoice email to ${userName} at: ${userEmail}`, error);
   }
 };
 
@@ -373,7 +375,7 @@ const sendEmail = async (recipient, subject, htmlContent) => {
       htmlContent,
     });
   } catch (error) {
-    logError('Failed to send email', error);
+    logger.error('Failed to send email', error);
   }
 };
 
@@ -399,6 +401,7 @@ const processRefund = async (req, res) => {
     const refundResponse = await initiateRefund(paymentReference, amount);
     res.status(200).send(refundResponse);
   } catch (error) {
+    logger.error('Error processing refund', error);
     res.status(500).send('Error processing refund');
   }
 };
@@ -421,13 +424,14 @@ const initiateRefund = async (paymentReference, amount) => {
       throw new Error('Refund initiation failed');
     }
 
-    logInfo(`Refund initiated successfully for reference: ${paymentReference}`);
+    logger.info(`Refund initiated successfully for reference: ${paymentReference}`);
     return response.data;
   } catch (error) {
-    logError('Error initiating refund', error);
+    logger.error('Error initiating refund', error);
     throw new Error('Refund initiation failed');
   }
 };
+
 
 module.exports = {
   initiatePayment,

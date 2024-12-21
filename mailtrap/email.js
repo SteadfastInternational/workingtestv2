@@ -123,8 +123,14 @@ const sendPaymentSuccessEmail = async (email, firstName, amount) => {
  */
 const sendPaymentFailureEmail = async (email, firstName, amount) => {
   const recipient = [{ email }];
+  
+  // Check if PAYMENT_FAILURE_TEMPLATE is a valid string
+  if (typeof PAYMENT_FAILURE_TEMPLATE !== 'string') {
+    throw new Error("Payment failure email template is not defined correctly.");
+  }
+
   try {
-    // Replace placeholder in the template with dynamic values
+    // Replace placeholders with actual values
     const emailBody = PAYMENT_FAILURE_TEMPLATE.replace("{firstName}", firstName)
                                               .replace("{amount}", amount.toFixed(2));
 
