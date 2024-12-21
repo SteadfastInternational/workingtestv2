@@ -1,6 +1,5 @@
-// utils/emailUtils.js
 const { mailtrapClient, sender } = require('../mailtrap/mailtrap.config');
-const { logError, logInfo } = require('./logger');
+const logger = require('./logger');  // Import the updated logger
 
 const sendEmail = async (recipientEmail, subject, htmlContent) => {
   try {
@@ -12,10 +11,10 @@ const sendEmail = async (recipientEmail, subject, htmlContent) => {
     };
 
     const sentMessage = await mailtrapClient.send(message);
-    logInfo(`Email successfully sent to ${recipientEmail}`);
+    logger.info(`Email successfully sent to ${recipientEmail}`);  // Use the winston logger
     return sentMessage;
   } catch (error) {
-    logError('Failed to send email', error);
+    logger.error('Failed to send email', error);  // Use the winston logger
     throw new Error('Failed to send invoice email');
   }
 };
