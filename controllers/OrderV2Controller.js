@@ -16,8 +16,11 @@ class OrderController {
     session.startTransaction();
 
     try {
+      // Convert userId from string to ObjectId
+      const userObjectId = mongoose.Types.ObjectId(userId);
+
       // Step 1: Fetch the cart and validate
-      const cart = await CartModel.findOne({ _id: cartId, userId }).session(session);
+      const cart = await CartModel.findOne({ _id: cartId, userId: userObjectId }).session(session);
       if (!cart) {
         logger.error(
           `User ${userId} failed to create order. Cart not found or does not belong to the user. Cart ID: ${cartId}`
@@ -102,7 +105,5 @@ class OrderController {
     }
   }
 }
-
-
 
 module.exports = OrderController;
