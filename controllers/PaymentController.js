@@ -47,7 +47,6 @@ const initiatePayment = async (cartId, totalPrice, email, userName, formattedAdd
     throw new Error('Unable to initiate payment. Please try again.');
   }
 };
-
 /**
  * Processes the Paystack webhook logic.
  * @param {Buffer} rawBody - Raw request body as Buffer.
@@ -68,7 +67,7 @@ const handleWebhook = async (rawBody, headers) => {
       .update(rawBody.toString())
       .digest('hex'));
     logger.debug('Provided signature:', signature);
-    throw new Error('Unauthorized');
+    return res.status(400).send("Webhook failed: Signature mismatch");
   }
 
   logger.info('Webhook signature verified successfully');
@@ -95,6 +94,7 @@ const handleWebhook = async (rawBody, headers) => {
 
       default:
         logger.error(`Unhandled webhook event: ${event.event}`);
+        break;
     }
   } catch (error) {
     logger.error('Error processing webhook event:', {
@@ -166,10 +166,13 @@ const verifyPaymentStatus = async (reference) => {
       headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` },
     });
 
-    const { status, message } = response.data;
+    const { status, message, data } = response.data;
     logger.debug('Paystack response:', response.data);
 
-    if (status === 'success') return 'success';
+    if (status === 'success' && data?.status === 'success') {
+      logger.info(`Transaction ${reference} verified successfully`);
+      return 'success';
+    }
 
     logger.error(`Paystack transaction ${reference} verification failed: ${message}`);
     return 'failed';
