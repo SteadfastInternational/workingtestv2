@@ -75,7 +75,7 @@ class OrderController {
       while (retries > 0 && !emailSent) {
         try {
           const emailResponse = await sendEmail({
-            to: cart.userId.email,
+            to: cart.email,
             subject: 'Your Order Has Been Processed',
             body: `Dear ${cart.userFirstName} ${cart.userLastName},\n\nYour order has been successfully processed.\n\nTracking ID: ${trackingNumber}\n\nThank you for shopping with us.`,
           });
