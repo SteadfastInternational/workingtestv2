@@ -33,31 +33,6 @@ router.post('/paystack/initiate', async (req, res) => {
   }
 });
 
-
-router.use('/paystack/webhook', bodyParser.raw({ type: 'application/json' }));
-
-// Webhook route handler
-router.post('/paystack/webhook', async (req, res) => {
-  try {
-    const signature = req.headers['x-paystack-signature']; // Paystack signature header
-    if (!signature) {
-      return res.status(400).send('No signature found');
-    }
-
-    // Log the raw body for debugging
-    logger.debug('Raw webhook body:', req.rawBody.toString());
-
-    // Verify and process the Paystack webhook signature and event
-    await handleWebhook(req.rawBody, req.headers);
-
-    // Acknowledge receipt of the webhook
-    res.sendStatus(200); // Respond with 200 OK after processing
-  } catch (error) {
-    logger.error('Error processing Paystack webhook:', error.message);
-    res.status(400).send('Webhook signature verification failed');
-  }
-});
-
 // Route to process refund requests (Admin only)
 router.post('/paystack/refund', isAdmin, async (req, res) => {
   const { paymentReference, amount } = req.body;

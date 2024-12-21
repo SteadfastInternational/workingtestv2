@@ -200,7 +200,7 @@ const isValidSignature = (rawBody, signature) => {
   logger.debug('Provided signature:', signature);
 
   return hash === signature;
-}
+};
 
 /**
  * Processes successful payment event automatically.

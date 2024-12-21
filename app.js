@@ -19,6 +19,7 @@ const couponRoutes = require("./routes/couponRoutes");
 // Middleware
 const errorHandler = require("./middleware/errorMiddleware");
 const productController = require("./controllers/productController");
+const { handleWebhook } = require("./controllers/PaymentController"); // Import your webhook handler
 
 dotenv.config();
 
@@ -72,6 +73,21 @@ app.use("/api/auth", authRoutes); // Authentication routes
 app.use("/api/admin", adminRoutes); // Admin routes
 app.use("/api", cartRoutes); // Cart routes
 app.use("/coupons", couponRoutes); // Coupon Fetching Routes
+
+// Paystack Webhook Route (added)
+app.post("/api/payment/paystack/webhook", async (req, res) => {
+  try {
+    // Call the handleWebhook function with raw body and headers
+    await handleWebhook(req.rawBody, req.headers);
+    
+    // Respond with a 200 OK status
+    res.status(200).send("Webhook processed successfully");
+  } catch (error) {
+    // Log any errors and send a 400 Bad Request response
+    console.error("Error processing Paystack webhook:", error.message);
+    res.status(400).send("Webhook processing failed");
+  }
+});
 
 // 404 Error Middleware for Undefined Routes
 app.use((req, res) => {
