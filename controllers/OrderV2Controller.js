@@ -54,7 +54,8 @@ class OrderController {
         orderId,              // Generated unique order ID
         cartId: cart.cartId,  // Using cartId as a string
         userId: cart.userId,
-        trackingNumber,           // Unique tracking ID
+        trackingNumber,
+        paymentStatus: cart.paymentStatus,           // Unique tracking ID
         orderStatus: 'Processed', // Initial status
         totalCartPrice: cart.totalCartPrice,            // Calculated total price from cart items
         address: formattedAddress,
