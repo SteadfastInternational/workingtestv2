@@ -117,7 +117,7 @@ const handleWebhook = async (rawBody, headers) => {
 const extractUserMetadata = (event) => {
   try {
     return {
-      userName: `${event?.data?.metadata?.firstName || 'Unknown'} ${event?.data?.metadata?.lastName || 'User'}`,
+      userName: `${event?.data?.metadata?.userName || 'Unknown'}`,
       userEmail: event?.data?.metadata?.email || 'unknown@example.com',
     };
   } catch (error) {
@@ -228,7 +228,7 @@ const isValidSignature = (rawBody, signature) => {
  */
 const processPaymentSuccess = async (paymentData, userEmail) => {
   const { metadata, amount, reference } = paymentData;
-  const userName = `${metadata?.firstName || 'Unknown'} ${metadata?.lastName || 'User'}`;
+  const userName = `${metadata?.userName|| 'Unknown'}`;
 
   try {
     // Log the start of the payment verification process
