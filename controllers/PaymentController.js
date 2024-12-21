@@ -378,17 +378,20 @@ const sendInvoiceEmail = async (metadata, amount, userName, userEmail) => {
     // Log the userEmail to see its value before any checks or validation
     console.log("User email before validation:", userEmail);
 
-    // Validate userEmail type and format
+    // Ensure userEmail is a string
     if (typeof userEmail !== 'string') {
       if (typeof userEmail === 'object') {
-        userEmail = userEmail.email || ''; // Assuming 'email' is a key in the object
+        // Extract email from the object if it has the 'email' property
+        userEmail = userEmail.email || '';
       }
+
+      // If userEmail is still not a string after trying to extract it, throw an error
       if (typeof userEmail !== 'string') {
         throw new Error(`Expected a string for userEmail but got: ${typeof userEmail}`);
       }
     }
 
-    // Validate email format
+    // Validate email format with a regular expression
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(userEmail)) {
       throw new Error(`Invalid email address provided: ${userEmail}`);
@@ -397,7 +400,7 @@ const sendInvoiceEmail = async (metadata, amount, userName, userEmail) => {
     // Log the invoice generation
     console.log(`Preparing invoice email for ${userName || 'Unknown User'}, CartID: ${metadata.cartId}`);
 
-    // Generate the cart items HTML
+    // Generate the cart items HTML (you may need to modify this function)
     const cartItemsHtml = generateCartItemsHtml(metadata.cartItems);
 
     // Generate the invoice HTML using the template and replace placeholders
@@ -406,13 +409,14 @@ const sendInvoiceEmail = async (metadata, amount, userName, userEmail) => {
       .replace('{{formattedAddress}}', metadata.formattedAddress || 'No address provided')
       .replace('{{email}}', userEmail)
       .replace('{{sanitizedCartItemsHtml}}', cartItemsHtml)
-      .replace('{{totalAmount}}', amount.toFixed(2));
+      .replace('{{totalAmount}}', amount.toFixed(2)); // Ensure amount is formatted correctly
 
     // Send the email
     await sendEmail(userEmail, 'Payment Received - Invoice', invoiceHtml);
 
     console.log(`Invoice email sent to ${userName || 'Unknown User'} at: ${userEmail}`);
   } catch (error) {
+    // Enhanced error logging
     console.error(`Error sending invoice email to ${userName || 'Unknown User'} at: ${userEmail}`, error);
     throw new Error(`Error sending invoice email: ${error.message || error}`);
   }
