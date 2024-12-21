@@ -62,41 +62,56 @@ const handleWebhook = async (rawBody, headers) => {
     throw new Error('Unauthorized');
   }
 
-  const event = JSON.parse(rawBody.toString()); // Parse raw body into JSON
-  const userName = `${event?.data?.metadata?.firstName || 'Unknown'} ${event?.data?.metadata?.lastName || 'User'}`;
-  const userEmail = event?.data?.metadata?.email || 'unknown@example.com';
+  const event = JSON.parse(rawBody.toString());
+  const { userName, userEmail } = extractUserMetadata(event);
 
   logger.info(`Received webhook event from ${userName}: ${event.event}`);
 
-  // Handle different event types
   switch (event?.event) {
     case 'charge.success':
-      logger.info(`Received charge.success event for ${userName} with reference: ${event.data.reference}`);
-
-      // Verify the payment by checking Paystack's API for the transaction status
-      const paymentStatus = await verifyPaymentStatus(event.data.reference);
-      
-      if (paymentStatus === 'success') {
-        logger.info(`Processing successful payment for ${userName} with reference: ${event.data.reference}`);
-        await processPaymentSuccess(event.data, userEmail);
-      } else {
-        logger.warn(`Payment for ${userName} with reference: ${event.data.reference} is not fully processed.`);
-        // Optionally, handle this scenario, like retrying or logging for manual review
-      }
+      await handleChargeSuccess(event, userName, userEmail);
       break;
 
     case 'charge.failed':
       logger.warn(`Payment failed for ${userName} with reference: ${event.data.reference}`);
-      // Handle payment failure logic here
       break;
 
     case 'charge.pending':
       logger.info(`Payment pending for ${userName} with reference: ${event.data.reference}`);
-      // Handle pending payment logic here
       break;
 
     default:
-      logger.warn(`Received unhandled event: ${event.event}`);
+      logger.error(`Unhandled webhook event: ${event.event}`);
+  }
+};
+
+/**
+ * Extracts user metadata from webhook event.
+ * @param {object} event - The webhook event data.
+ * @returns {object} Metadata including userName and userEmail.
+ */
+const extractUserMetadata = (event) => ({
+  userName: `${event?.data?.metadata?.firstName || 'Unknown'} ${event?.data?.metadata?.lastName || 'User'}`,
+  userEmail: event?.data?.metadata?.email || 'unknown@example.com',
+});
+
+/**
+ * Handles the `charge.success` Paystack event.
+ * @param {object} event - The webhook event data.
+ * @param {string} userName - User's name from metadata.
+ * @param {string} userEmail - User's email from metadata.
+ */
+const handleChargeSuccess = async (event, userName, userEmail) => {
+  const reference = event.data.reference;
+  logger.info(`Received charge.success event for ${userName} with reference: ${reference}`);
+
+  const paymentStatus = await verifyPaymentStatus(reference);
+
+  if (paymentStatus === 'success') {
+    logger.info(`Processing successful payment for ${userName} with reference: ${reference}`);
+    await processPaymentSuccess(event.data, userEmail);
+  } else {
+    logger.warn(`Payment for ${userName} with reference: ${reference} is not fully processed.`);
   }
 };
 
@@ -108,18 +123,14 @@ const handleWebhook = async (rawBody, headers) => {
 const verifyPaymentStatus = async (reference) => {
   try {
     const response = await axios.get(`https://api.paystack.co/transaction/verify/${reference}`, {
-      headers: {
-        Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`, // Use your Paystack Secret Key here
-      },
+      headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` },
     });
 
-    const data = response.data;
-    if (data.status === 'success') {
-      return 'success';
-    } else {
-      logger.error(`Paystack transaction ${reference} verification failed: ${data.message}`);
-      return 'failed';
-    }
+    const { status, message } = response.data;
+    if (status === 'success') return 'success';
+
+    logger.error(`Paystack transaction ${reference} verification failed: ${message}`);
+    return 'failed';
   } catch (error) {
     logger.error(`Error verifying Paystack payment status for reference: ${reference}`, {
       stack: error.stack,
@@ -135,16 +146,13 @@ const verifyPaymentStatus = async (reference) => {
  * @returns {boolean} Whether the signature is valid.
  */
 const isValidSignature = (rawBody, signature) => {
-  const bodyString = rawBody.toString();
   const hash = crypto
     .createHmac('sha512', PAYSTACK_WEBHOOK_SECRET)
-    .update(bodyString)
+    .update(rawBody.toString())
     .digest('hex');
 
   return hash === signature;
 };
-
-
 /**
  * Processes successful payment event automatically.
  * Verifies payment and updates the order and cart.
