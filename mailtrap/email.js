@@ -87,7 +87,6 @@ const sendWelcomeEmail = async (email, firstName) => {
 };
 
 
-
 /**
  * Function to send payment success email
  * @param {string} email - The recipient's email address.
@@ -95,8 +94,14 @@ const sendWelcomeEmail = async (email, firstName) => {
  * @param {number} amount - The amount paid.
  */
 const sendPaymentSuccessEmail = async (email, userName, amount) => {
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    throw new Error(`Invalid email address provided: ${email}`);
+  }
+
   // Ensure recipient is an array of objects, each containing an email string
-  const recipient = [{ email: String(email) }]; // Explicitly cast email to a string
+  const recipient = [{ email }];
 
   // Ensure PAYMENT_SUCCESS_TEMPLATE is a function and is called with the proper arguments
   if (typeof PAYMENT_SUCCESS_TEMPLATE !== 'function') {
@@ -126,18 +131,21 @@ const sendPaymentSuccessEmail = async (email, userName, amount) => {
 
 
 
-
-
 /**
- * Function to send payment success email
+ * Function to send payment failure email
  * @param {string} email - The recipient's email address.
- * @param {string} userName - The user's first name.
- * @param {number} amount - The amount paid.
+ * @param {string} userName - The user's name.
+ * @param {number} amount - The amount attempted to pay.
  */
-
 const sendPaymentFailureEmail = async (email, userName, amount) => {
+  // Validate email format
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    throw new Error(`Invalid email address provided: ${email}`);
+  }
+
   // Ensure recipient is an array of objects with a valid email string
-  const recipient = [{ email: String(email) }]; // Ensure email is explicitly cast to a string
+  const recipient = [{ email: String(email) }];
 
   // Ensure PAYMENT_FAILURE_TEMPLATE is a function and is called with proper arguments
   if (typeof PAYMENT_FAILURE_TEMPLATE !== 'function') {
@@ -147,6 +155,9 @@ const sendPaymentFailureEmail = async (email, userName, amount) => {
   try {
     // Generate the email body by calling the template function with necessary arguments
     const emailBody = PAYMENT_FAILURE_TEMPLATE(userName, amount);
+
+    // Log email for debugging purposes
+    console.log("Sending payment failure email to:", recipient);
 
     // Send payment failure email using Mailtrap client
     const response = await mailtrapClient.send({
