@@ -41,7 +41,7 @@ class OrderController {
       const orderId = `ORDER-${uuidv4()}-${Date.now()}`;  // Unique order ID with UUID and timestamp
 
       // Step 3: Generate a unique tracking ID for the order
-      const trackingId = `STEADFAST-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+      const trackingNumber = `STEADFAST-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
 
       // Step 4: Use the formatted address from the cart
       const formattedAddress = cart.formattedAddress || cart.address; // Fallback to cart.address if formattedAddress is unavailable
@@ -54,10 +54,9 @@ class OrderController {
         orderId,              // Generated unique order ID
         cartId: cart.cartId,  // Using cartId as a string
         userId: cart.userId,
-        trackingId,           // Unique tracking ID
+        trackingNumber,           // Unique tracking ID
         orderStatus: 'Processed', // Initial status
-        paymentReference: cart.paymentReference,  // Assuming this is available in the cart
-        totalPrice,            // Calculated total price from cart items
+        totalPrice: cart.totalCartPrice,            // Calculated total price from cart items
         address: formattedAddress,
         items: cart.items,
         createdAt: new Date(),
