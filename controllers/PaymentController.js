@@ -289,7 +289,7 @@ const processPaymentSuccess = async (paymentData, userEmail) => {
     await sendPaymentSuccessEmail(userEmail, userName, amount); // Send success email
     await updateCartAndCreateOrder(metadata, amount, reference, userName); // Pass entire metadata
     await updateStockAfterPayment('paid', metadata.cartId); // Update stock
-    await sendInvoiceEmail(userEmail, amount, userName); // Send invoice email after success
+    await sendInvoiceEmail(metadata, amount, userName, userEmail); // Send invoice email after success
 
     // Log the completion of payment processing
     logger.info(`Payment success processing complete for ${userName}`);
@@ -365,8 +365,6 @@ const updateCartAndCreateOrder = async (metadata, amount, reference, userName) =
 
 
 
-
-
 /**
  * Sends an invoice email after successful payment.
  * @param {object} metadata - Metadata containing user and cart info.
@@ -376,38 +374,45 @@ const updateCartAndCreateOrder = async (metadata, amount, reference, userName) =
  */
 const sendInvoiceEmail = async (metadata, amount, userName, userEmail) => {
   try {
-    logger.info(`Preparing invoice email for ${userName}, CartID: ${metadata.cartId}`);
+    logger.info(`Preparing invoice email for ${userName || 'Unknown User'}, CartID: ${metadata.cartId}`);
 
-    const cartItemsHtml = await generateCartItemsHtml(metadata.items);
-    const emailHtml = generateInvoiceHtml(
-      cartItemsHtml,
-      amount,
-      metadata.cartId,
-      {
-        name: `${metadata.firstName || 'Unknown'} ${metadata.lastName || 'User'}`,
-        email: userEmail,
-        address: metadata.formattedAddress,
-      },
-      new Date()
-    );
+    // Query the database to retrieve the cart's items using metadata.cartId (which is a string)
+    const cart = await CartModel.findOne({ cartId: metadata.cartId }); // Query by cartId string
 
-    await sendEmail(userEmail, 'Payment Received - Invoice', emailHtml); // Send the email
-    logger.info(`Invoice email sent to ${userName} at: ${userEmail}`);
+    if (!cart) {
+      logger.error(`Cart with ID ${metadata.cartId} not found`);
+      return;
+    }
+
+    // Generate HTML content for cart items
+    const cartItemsHtml = await generateCartItemsHtml(cart.items);
+    
+    // Replace placeholders in the template with actual data
+    const invoiceHtml = generateInvoiceHtml
+      .replace('{{name}}', userName || 'Unknown User')
+      .replace('{{formattedAddress}}', metadata.formattedAddress || 'No address provided')
+      .replace('{{email}}', userEmail)
+      .replace('{{sanitizedCartItemsHtml}}', cartItemsHtml)
+      .replace('{{totalAmount}}', amount.toFixed(2));  // Format amount to two decimal places
+
+    // Send the email
+    await sendEmail(userEmail, 'Payment Received - Invoice', invoiceHtml);
+
+    logger.info(`Invoice email sent to ${userName || 'Unknown User'} at: ${userEmail}`);
   } catch (error) {
-    logger.error(`Error sending invoice email to ${userName} at: ${userEmail}`, error);
+    logger.error(`Error sending invoice email to ${userName || 'Unknown User'} at: ${userEmail}`, error);
   }
 };
 
 /**
  * Generates HTML content for cart items in the invoice.
- * @param {Array} items - List of purchased items.
+ * @param {Array} items - List of purchased items in the cart.
  * @returns {string} HTML string for the cart items.
  */
 const generateCartItemsHtml = async (items) => {
   let cartItemsHtml = '';
   for (const item of items) {
-    const product = await ProductModel.findById(item.productId);
-    const productImage = product?.image || 'https://via.placeholder.com/80';
+    const productImage = item.image || 'https://via.placeholder.com/80'; // Use item.image if available
     cartItemsHtml += ` 
       <tr>
         <td><img src="${productImage}" alt="${item.productName}" width="80" /></td>
@@ -430,22 +435,22 @@ const generateCartItemsHtml = async (items) => {
 const sendEmail = async (recipient, subject, htmlContent) => {
   try {
     const message = {
-      from: {
-        email: 'no-reply@yourcompany.com',  // Set the sender email here
-        name: 'Your Company',  // Optional, add a sender name
-      },
+      from: sender,  // Use the sender object from mailtrap.js
       to: recipient,
       subject,
       html: htmlContent,
     };
 
-    // Assuming you have a mail client like Mailtrap configured as per the earlier code
+    // Send the email via Mailtrap
     await mailtrapClient.send(message);
     logger.info(`Email sent to ${recipient} with subject: ${subject}`);
   } catch (error) {
     logger.error('Failed to send email', error);
   }
 };
+
+
+
 
 
 /**

@@ -7,6 +7,8 @@ const {
   PAYMENT_FAILURE_TEMPLATE
 } = require("./emailTemplates.js");
 
+
+
 const { mailtrapClient, sender } = require("./mailtrap.config");
 
 /**
