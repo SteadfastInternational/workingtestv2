@@ -5,7 +5,7 @@ const ProductModel = require('../models/products');
 const OrderController = require('./OrderV2Controller');
 const { sendPaymentSuccessEmail, sendPaymentFailureEmail } = require('../mailtrap/email');
 const logger = require('../utils/logger');
-const generateInvoiceHtml = require('../templates/invoiceTemplate');
+const invoiceTemplate = require('../templates/invoiceTemplate');
 const { updateStockAfterPayment } = require('./cartV2Controller'); // Import the stock update function
 const { sendEmail } = require('../utils/emailUtils');
 
@@ -394,43 +394,30 @@ const sendInvoiceEmail = async (metadata, amount, userName, userEmail) => {
       throw new Error(`Invalid email address provided: ${userEmail}`);
     }
 
-    logger.info(`Preparing invoice email for ${userName || 'Unknown User'}, CartID: ${metadata.cartId}`);
+    // Log the invoice generation
+    console.log(`Preparing invoice email for ${userName || 'Unknown User'}, CartID: ${metadata.cartId}`);
 
-    // Query the database to retrieve the cart's items using metadata.cartId (which is a string)
-    const cart = await CartModel.findOne({ cartId: metadata.cartId });
+    // Generate the cart items HTML
+    const cartItemsHtml = generateCartItemsHtml(metadata.cartItems);
 
-    if (!cart) {
-      logger.error(`Cart with ID ${metadata.cartId} not found`);
-      return;
-    }
-
-    // Generate HTML content for cart items
-    const cartItemsHtml = await generateCartItemsHtml(cart.items);
-
-    // Generate invoice HTML with dynamically populated placeholders
-    if (typeof generateInvoiceHtml !== 'function') {
-      throw new Error("Invoice email template is not defined correctly.");
-    }
-
-    const invoiceHtml = generateInvoiceHtml
+    // Generate the invoice HTML using the template and replace placeholders
+    const invoiceHtml = invoiceTemplate
       .replace('{{name}}', userName || 'Unknown User')
       .replace('{{formattedAddress}}', metadata.formattedAddress || 'No address provided')
       .replace('{{email}}', userEmail)
       .replace('{{sanitizedCartItemsHtml}}', cartItemsHtml)
-      .replace('{{totalAmount}}', amount.toFixed(2)); // Format amount to two decimal places
-
-    // Log email right before sending
-    console.log("Sending email to:", userEmail);
+      .replace('{{totalAmount}}', amount.toFixed(2));
 
     // Send the email
     await sendEmail(userEmail, 'Payment Received - Invoice', invoiceHtml);
 
-    logger.info(`Invoice email sent to ${userName || 'Unknown User'} at: ${userEmail}`);
+    console.log(`Invoice email sent to ${userName || 'Unknown User'} at: ${userEmail}`);
   } catch (error) {
-    logger.error(`Error sending invoice email to ${userName || 'Unknown User'} at: ${userEmail}`, error);
+    console.error(`Error sending invoice email to ${userName || 'Unknown User'} at: ${userEmail}`, error);
     throw new Error(`Error sending invoice email: ${error.message || error}`);
   }
 };
+
 
 
 const generateCartItemsHtml = async (items) => {

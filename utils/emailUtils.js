@@ -10,6 +10,14 @@ const logger = require('../utils/logger');
  */
 const sendEmail = async (userEmail, subject, htmlContent) => {
   try {
+    // Log the email details before entering the function
+    logger.info(`Attempting to send email to: ${JSON.stringify(userEmail)} with subject: ${subject}`);
+
+    // Ensure userEmail is a string, or extract it from an object if needed
+    if (typeof userEmail === 'object' && userEmail.email) {
+      userEmail = userEmail.email; // Extract the email property if it's an object
+    }
+
     // Validate recipient email
     if (!userEmail || typeof userEmail !== 'string') {
       throw new Error(`Invalid email address provided: ${userEmail}`);
@@ -39,5 +47,6 @@ const sendEmail = async (userEmail, subject, htmlContent) => {
     throw new Error(`Email sending failed: ${error.message}`);
   }
 };
+
 
 module.exports = { sendEmail };
