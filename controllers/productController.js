@@ -417,3 +417,22 @@ exports.searchProducts = async (req, res) => {
     return res.status(500).json({ success: false, message: err.message });
   }
 };
+
+
+
+exports.getProductById = async (req, res) => {
+  try {
+    const { productId } = req.params; // Assuming productId is passed in URL params
+
+    const product = await Product.findById(productId);
+
+    if (!product) {
+      return res.status(404).json({ success: false, message: `Product not found for productId: ${productId}` });
+    }
+
+    return res.json({ success: true, product });
+  } catch (err) {
+    console.error("Error fetching product data:", err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};

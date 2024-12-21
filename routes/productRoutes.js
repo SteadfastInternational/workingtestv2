@@ -14,4 +14,8 @@ router.get('/all', productController.getAllProducts);
 
 // Search products by name, slug, or tags
 router.get('/search/:searchTerm', productController.searchProducts);
+
+// Fetch a single product by its ID
+router.get('/:productId', productController.getProductById);  // Added route to get a product by ID
+
 module.exports = router;

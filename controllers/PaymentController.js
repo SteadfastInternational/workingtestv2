@@ -8,7 +8,7 @@ const logger = require('../utils/logger');
 const invoiceTemplate = require('../templates/invoiceTemplate');
 const { updateStockAfterPayment } = require('./cartV2Controller'); // Import the stock update function
 const { sendEmail } = require('../utils/emailUtils');
-
+const {getProductById} = require('./productController')
 
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 const PAYSTACK_WEBHOOK_SECRET = process.env.PAYSTACK_WEBHOOK_SECRET;
@@ -378,38 +378,31 @@ const sendInvoiceEmail = async (metadata, amount, userName, userEmail) => {
     // Log the userEmail to see its value before any checks or validation
     console.log("User email before validation:", userEmail);
 
-    // Ensure userEmail is a string
-    if (typeof userEmail !== 'string') {
-      if (typeof userEmail === 'object') {
-        // Extract email from the object if it has the 'email' property
-        userEmail = userEmail.email || '';
-      }
-
-      // If userEmail is still not a string after trying to extract it, throw an error
-      if (typeof userEmail !== 'string') {
-        throw new Error(`Expected a string for userEmail but got: ${typeof userEmail}`);
-      }
+    // Extract email from object if necessary and validate the email format
+    if (typeof userEmail === 'object' && userEmail.email) {
+      userEmail = userEmail.email;
     }
 
-    // Validate email format with a regular expression
+    // Validate email type and format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(userEmail)) {
+    if (typeof userEmail !== 'string' || !emailRegex.test(userEmail)) {
       throw new Error(`Invalid email address provided: ${userEmail}`);
     }
 
     // Log the invoice generation
-    console.log(`Preparing invoice email for ${userName || 'Unknown User'}, CartID: ${metadata.cartId}`);
+    console.log(`Preparing invoice email for ${userName || 'Unknown User'}, CartID: ${metadata.cart.cartId}`);
 
-    // Generate the cart items HTML (you may need to modify this function)
-    const cartItemsHtml = generateCartItemsHtml(metadata.cartItems);
+    // Ensure cartItems is an array before passing it to the function
+    const cartItems = Array.isArray(metadata.cart.items) ? metadata.cart.items : [];
+    const cartItemsHtml = generateCartItemsHtml(cartItems);
 
     // Generate the invoice HTML using the template and replace placeholders
     const invoiceHtml = invoiceTemplate
       .replace('{{name}}', userName || 'Unknown User')
-      .replace('{{formattedAddress}}', metadata.formattedAddress || 'No address provided')
+      .replace('{{formattedAddress}}', metadata.cart.address || 'No address provided')
       .replace('{{email}}', userEmail)
       .replace('{{sanitizedCartItemsHtml}}', cartItemsHtml)
-      .replace('{{totalAmount}}', amount.toFixed(2)); // Ensure amount is formatted correctly
+      .replace('{{totalAmount}}', amount && !isNaN(amount) ? amount.toFixed(2) : '0.00');
 
     // Send the email
     await sendEmail(userEmail, 'Payment Received - Invoice', invoiceHtml);
@@ -417,29 +410,48 @@ const sendInvoiceEmail = async (metadata, amount, userName, userEmail) => {
     console.log(`Invoice email sent to ${userName || 'Unknown User'} at: ${userEmail}`);
   } catch (error) {
     // Enhanced error logging
-    console.error(`Error sending invoice email to ${userName || 'Unknown User'} at: ${userEmail}`, error);
+    console.error(`Error in sendInvoiceEmail for ${userName || 'Unknown User'}: `, error);
     throw new Error(`Error sending invoice email: ${error.message || error}`);
   }
 };
 
-
-
 const generateCartItemsHtml = async (items) => {
   let cartItemsHtml = '';
+
   for (const item of items) {
-    const productImage = item.image || 'https://via.placeholder.com/80'; // Use item.image if available
-    cartItemsHtml += `
-      <tr>
-        <td><img src="${productImage}" alt="${item.productName}" width="80" /></td>
-        <td>${item.productName}</td>
-        <td>${item.quantity}</td>
-        <td>₦${item.price.toFixed(2)}</td>
-        <td>₦${(item.quantity * item.price).toFixed(2)}</td>
-      </tr>
-    `;
+    try {
+      // Call the existing getProductById function to fetch product data
+      const productData = await getProductById(item.productId);
+
+      // Get the product image (use a default if not available)
+      const productImage = productData?.image || 'https://via.placeholder.com/80';
+      const productName = productData?.productName || item.productName;
+
+      // Ensure price and quantity are numbers before using them
+      const price = parseFloat(item.price) || 0;
+      const quantity = parseInt(item.quantity, 10) || 0;
+
+      // Escape product name to prevent HTML injection
+      const escapedProductName = productName.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/&/g, '&amp;');
+
+      // Generate HTML for each cart item
+      cartItemsHtml += `
+        <tr>
+          <td><img src="${productImage}" alt="${escapedProductName}" width="80" /></td>
+          <td>${escapedProductName}</td>
+          <td>${quantity}</td>
+          <td>₦${price.toFixed(2)}</td>
+          <td>₦${(quantity * price).toFixed(2)}</td>
+        </tr>
+      `;
+    } catch (error) {
+      console.error(`Error fetching product details for productId: ${item.productId}`, error);
+    }
   }
+
   return cartItemsHtml;
 };
+
 
 
 
