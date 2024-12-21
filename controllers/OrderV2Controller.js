@@ -56,7 +56,7 @@ class OrderController {
         userId: cart.userId,
         trackingNumber,           // Unique tracking ID
         orderStatus: 'Processed', // Initial status
-        totalPrice: cart.totalCartPrice,            // Calculated total price from cart items
+        totalCartPrice: cart.totalCartPrice,            // Calculated total price from cart items
         address: formattedAddress,
         items: cart.items,
         createdAt: new Date(),
