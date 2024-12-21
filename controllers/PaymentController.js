@@ -373,7 +373,7 @@ const updateCartAndCreateOrder = async (metadata, amount, reference, userName) =
  * @param {string} userName - Customer's full name.
  * @param {string} userEmail - Customer's email address.
  */
-const sendInvoiceEmail = async (metadata, amount, userName, userEmail) => {
+const sendInvoiceEmail = async (metadata, amount, userEmail) => {
   try {
     // Log the userEmail to see its value before any checks or validation
     console.log("User email before validation:", userEmail);
@@ -390,16 +390,18 @@ const sendInvoiceEmail = async (metadata, amount, userName, userEmail) => {
     }
 
     // Log the invoice generation
-    console.log(`Preparing invoice email for ${userName || 'Unknown User'}, CartID: ${metadata.cart.cartId}`);
+    console.log(`Preparing invoice email for ${metadata.userName || 'Unknown User'}, CartID: ${metadata.cartId}`);
 
     // Ensure cartItems is an array before passing it to the function
-    const cartItems = Array.isArray(metadata.cart.items) ? metadata.cart.items : [];
-    const cartItemsHtml = generateCartItemsHtml(cartItems);
+    const cartItems = Array.isArray(metadata.cartItems) ? metadata.cartItems : [];
+    
+    // Generate the cart items HTML
+    const cartItemsHtml = await generateCartItemsHtml(cartItems);
 
     // Generate the invoice HTML using the template and replace placeholders
     const invoiceHtml = invoiceTemplate
-      .replace('{{name}}', userName || 'Unknown User')
-      .replace('{{formattedAddress}}', metadata.cart.address || 'No address provided')
+      .replace('{{name}}', metadata.userName || 'Unknown User')
+      .replace('{{formattedAddress}}', metadata.formattedAddress || 'No address provided')
       .replace('{{email}}', userEmail)
       .replace('{{sanitizedCartItemsHtml}}', cartItemsHtml)
       .replace('{{totalAmount}}', amount && !isNaN(amount) ? amount.toFixed(2) : '0.00');
@@ -407,53 +409,55 @@ const sendInvoiceEmail = async (metadata, amount, userName, userEmail) => {
     // Send the email
     await sendEmail(userEmail, 'Payment Received - Invoice', invoiceHtml);
 
-    console.log(`Invoice email sent to ${userName || 'Unknown User'} at: ${userEmail}`);
+    console.log(`Invoice email sent to ${metadata.userName || 'Unknown User'} at: ${userEmail}`);
   } catch (error) {
     // Enhanced error logging
-    console.error(`Error in sendInvoiceEmail for ${userName || 'Unknown User'}: `, error);
+    console.error(`Error in sendInvoiceEmail for ${metadata.userName || 'Unknown User'}: `, error);
     throw new Error(`Error sending invoice email: ${error.message || error}`);
   }
 };
 
+// Function to fetch cart items by cartId (simulating database fetch)
 const generateCartItemsHtml = async (items) => {
   let cartItemsHtml = '';
 
-  for (const item of items) {
-    try {
-      // Call the existing getProductById function to fetch product data
-      const productData = await getProductById(item.productId);
+  if (Array.isArray(items) && items.length > 0) {
+    for (const item of items) {
+      try {
+        // Call the existing getProductById function to fetch product data
+        const productData = await getProductById(item.productId);
 
-      // Get the product image (use a default if not available)
-      const productImage = productData?.image || 'https://via.placeholder.com/80';
-      const productName = productData?.productName || item.productName;
+        // Get the product image (use a default if not available)
+        const productImage = productData?.image || 'https://via.placeholder.com/80';
+        const productName = productData?.productName || item.productName;
 
-      // Ensure price and quantity are numbers before using them
-      const price = parseFloat(item.price) || 0;
-      const quantity = parseInt(item.quantity, 10) || 0;
+        // Ensure price and quantity are numbers before using them
+        const price = parseFloat(item.price) || 0;
+        const quantity = parseInt(item.quantity, 10) || 0;
 
-      // Escape product name to prevent HTML injection
-      const escapedProductName = productName.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/&/g, '&amp;');
+        // Escape product name to prevent HTML injection
+        const escapedProductName = productName.replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/&/g, '&amp;');
 
-      // Generate HTML for each cart item
-      cartItemsHtml += `
-        <tr>
-          <td><img src="${productImage}" alt="${escapedProductName}" width="80" /></td>
-          <td>${escapedProductName}</td>
-          <td>${quantity}</td>
-          <td>₦${price.toFixed(2)}</td>
-          <td>₦${(quantity * price).toFixed(2)}</td>
-        </tr>
-      `;
-    } catch (error) {
-      console.error(`Error fetching product details for productId: ${item.productId}`, error);
+        // Generate HTML for each cart item
+        cartItemsHtml += `
+          <tr>
+            <td><img src="${productImage}" alt="${escapedProductName}" width="80" /></td>
+            <td>${escapedProductName}</td>
+            <td>${quantity}</td>
+            <td>₦${price.toFixed(2)}</td>
+            <td>₦${(quantity * price).toFixed(2)}</td>
+          </tr>
+        `;
+      } catch (error) {
+        console.error(`Error fetching product details for productId: ${item.productId}`, error);
+      }
     }
+  } else {
+    cartItemsHtml = '<tr><td colspan="5">No items in the cart.</td></tr>';
   }
 
   return cartItemsHtml;
 };
-
-
-
 
 
 
