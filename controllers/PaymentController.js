@@ -7,8 +7,7 @@ const { sendPaymentSuccessEmail, sendPaymentFailureEmail } = require('../mailtra
 const logger = require('../utils/logger');
 const generateInvoiceHtml = require('../templates/invoiceTemplate');
 const { updateStockAfterPayment } = require('./cartV2Controller'); // Import the stock update function
-const { mailtrapClient, sender } = require('../mailtrap/mailtrap.config'); 
-
+const { sendEmail } = require('../utils/emailUtils');
 
 
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
@@ -367,7 +366,6 @@ const updateCartAndCreateOrder = async (metadata, amount, reference, userName) =
 };
 
 
-
 /**
  * Sends an invoice email after successful payment.
  * @param {object} metadata - Metadata containing user and cart info.
@@ -395,7 +393,7 @@ const sendInvoiceEmail = async (metadata, amount, userName, userEmail) => {
 
     logger.info(`Preparing invoice email for ${userName || 'Unknown User'}, CartID: ${metadata.cartId}`);
 
-    // Query the database to retrieve the cart's items using metadata.cartId (which is a string)
+    // Retrieve the cart's items using metadata.cartId (which is a string)
     const cart = await CartModel.findOne({ cartId: metadata.cartId });
 
     if (!cart) {
@@ -407,10 +405,6 @@ const sendInvoiceEmail = async (metadata, amount, userName, userEmail) => {
     const cartItemsHtml = await generateCartItemsHtml(cart.items);
 
     // Generate invoice HTML with dynamically populated placeholders
-    if (typeof generateInvoiceHtml !== 'function') {
-      throw new Error("Invoice email template is not defined correctly.");
-    }
-
     const invoiceHtml = generateInvoiceHtml
       .replace('{{name}}', userName || 'Unknown User')
       .replace('{{formattedAddress}}', metadata.formattedAddress || 'No address provided')
@@ -418,7 +412,7 @@ const sendInvoiceEmail = async (metadata, amount, userName, userEmail) => {
       .replace('{{sanitizedCartItemsHtml}}', cartItemsHtml)
       .replace('{{totalAmount}}', amount.toFixed(2)); // Format amount to two decimal places
 
-    // Send the email
+    // Send the email using the imported sendEmail function
     await sendEmail(userEmail, 'Payment Received - Invoice', invoiceHtml);
 
     logger.info(`Invoice email sent to ${userName || 'Unknown User'} at: ${userEmail}`);
@@ -448,34 +442,6 @@ const generateCartItemsHtml = async (items) => {
     `;
   }
   return cartItemsHtml;
-};
-
-/**
- * Sends a general email to the customer.
- * @param {string} userEmail - Email recipient address.
- * @param {string} subject - Email subject.
- * @param {string} htmlContent - HTML content of the email.
- */
-const sendEmail = async (userEmail, subject, htmlContent) => {
-  try {
-    // Ensure recipient is in the correct format
-    const recipient = [{ email: String(userEmail) }];
-
-    const message = {
-      from: sender, // Use the sender object from mailtrap.js
-      to: recipient, // Recipient is an array of objects
-      subject,
-      html: htmlContent,
-    };
-
-    // Send the email via Mailtrap
-    const response = await mailtrapClient.send(message);
-    logger.info(`Email sent to ${userEmail} with subject: ${subject}`);
-    return response;
-  } catch (error) {
-    logger.error('Failed to send email', error);
-    throw new Error(`Error sending email to ${userEmail}: ${error.message || error}`);
-  }
 };
 
 
