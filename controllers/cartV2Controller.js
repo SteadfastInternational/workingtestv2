@@ -1,7 +1,6 @@
 const Coupon = require('../models/coupon'); // Ensure you have the Coupon model
 const Cart = require('../models/cart');
 const Product = require('../models/products');
-const Coupon = require('../models/coupon');
 const logger = require('../utils/logger');
 
 
