@@ -439,7 +439,7 @@ const sendEmail = async (userEmail, subject, htmlContent) => {
   try {
     const message = {
       from: sender,  // Use the sender object from mailtrap.js
-      to: [{ email: userEmail }], // Wrap recipient in an array
+      to: [userEmail], // Pass the email directly as an array
       subject,
       html: htmlContent,
     };
@@ -451,6 +451,7 @@ const sendEmail = async (userEmail, subject, htmlContent) => {
     logger.error('Failed to send email', error);
   }
 };
+
 
 
 
