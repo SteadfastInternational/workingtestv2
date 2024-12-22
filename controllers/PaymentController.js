@@ -9,6 +9,8 @@ const invoiceTemplate = require('../templates/invoiceTemplate');
 const { updateStockAfterPayment } = require('./cartV2Controller'); // Import the stock update function
 const { sendEmail } = require('../utils/emailUtils');
 const {getProductById} = require('./productController')
+const {getCartById} = require('./cartController');
+
 
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 const PAYSTACK_WEBHOOK_SECRET = process.env.PAYSTACK_WEBHOOK_SECRET;
@@ -380,27 +382,30 @@ const updateCartAndCreateOrder = async (metadata, amount, reference, userName, u
  */
 const sendInvoiceEmail = async (metadata, amount, userName, userEmail) => {
   try {
-
-
-    // Use the passed userEmail instead of extracting it from metadata
+    // Ensure userEmail is a string and validate the email format
     if (!userEmail) {
       throw new Error('Email address is missing.');
     }
-
-
-    // Ensure userEmail is a string and validate the email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (typeof userEmail !== 'string' || !emailRegex.test(userEmail)) {
       throw new Error(`Invalid email address provided: ${userEmail}`);
     }
 
-   
-
     // Log the invoice generation
     console.log(`Preparing invoice email for ${userName || 'Unknown User'}, CartID: ${metadata.cartId}`);
 
+    // Step 1: Extract the cartId from metadata
+    const cartId = metadata.cartId;
+    let cartItems = [];
+
+    // Fetch cart items by cartId (using existing controller)
+    if (cartId) {
+      // Assuming the existing controller function is available as `fetchCartById`
+      cartItems = await getCartById(cartId);
+    }
+
     // Ensure cartItems is an array before passing it to the function
-    const cartItems = Array.isArray(metadata.cartItems) ? metadata.cartItems : [];
+    cartItems = Array.isArray(cartItems) ? cartItems : [];
 
     // Generate the cart items HTML
     const cartItemsHtml = await generateCartItemsHtml(cartItems);
@@ -427,10 +432,11 @@ const sendInvoiceEmail = async (metadata, amount, userName, userEmail) => {
   }
 };
 
-
-
-
-// Function to fetch cart items by cartId (simulating database fetch)
+/**
+ * Function to generate HTML for cart items.
+ * @param {Array} items - Array of cart items.
+ * @returns {string} - HTML string for the cart items.
+ */
 const generateCartItemsHtml = async (items) => {
   let cartItemsHtml = '';
 
