@@ -1,19 +1,23 @@
 const OrderModel = require('../models/Order');
 const CartModel = require('../models/cart');
-const { sendEmail } = require('../utils/emailUtils'); // Assuming utility exists
+const { sendEmail } = require('../utils/emailUtils');
 const mongoose = require('mongoose');
-const logger = require('../utils/logger'); // Assuming a logger utility exists
-const { v4: uuidv4 } = require('uuid');  // Importing uuid
+const logger = require('../utils/logger');
+const { v4: uuidv4 } = require('uuid');
 
-
+/**
+ * OrderController Class
+ * Handles order-related operations, such as creating orders from carts.
+ */
 class OrderController {
   /**
    * Create an order from a cart
    * @param {String} cartId - ID of the cart
    * @param {String} userId - ID of the user
+   * @param {String} userEmail - Email of the user
    * @returns {Object} - Created order
    */
-  static async createOrder(cartId, userId) {
+  static async createOrder(cartId, userId, userEmail) {
     const session = await mongoose.startSession(); // Start a session for transactions
     session.startTransaction();
 
@@ -38,26 +42,26 @@ class OrderController {
       }
 
       // Step 2: Generate a unique order ID using uuid and timestamp
-      const orderId = `ORDER-${uuidv4()}-${Date.now()}`;  // Unique order ID with UUID and timestamp
+      const orderId = `ORDER-${uuidv4()}-${Date.now()}`;
 
       // Step 3: Generate a unique tracking ID for the order
       const trackingNumber = `STEADFAST-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
 
       // Step 4: Use the formatted address from the cart
-      const formattedAddress = cart.formattedAddress || cart.address; // Fallback to cart.address if formattedAddress is unavailable
+      const formattedAddress = cart.formattedAddress || cart.address;
 
-      // Step 5: Get total price from cart items
-      const totalPrice = cart.items.reduce((total, item) => total + item.totalPrice, 0); // Calculate total price from items
+      // Step 5: Calculate total price from cart items
+      const totalPrice = cart.items.reduce((total, item) => total + item.totalPrice, 0);
 
       // Step 6: Create the order
       const order = new OrderModel({
-        orderId,              // Generated unique order ID
-        cartId: cart.cartId,  // Using cartId as a string
+        orderId,
+        cartId: cart.cartId,
         userId: cart.userId,
         trackingNumber,
-        paymentStatus: cart.paymentStatus,           // Unique tracking ID
-        orderStatus: 'Processed', // Initial status
-        totalCartPrice: cart.totalCartPrice,            // Calculated total price from cart items
+        paymentStatus: cart.paymentStatus,
+        orderStatus: 'Processed',
+        totalCartPrice: cart.totalCartPrice,
         address: formattedAddress,
         items: cart.items,
         createdAt: new Date(),
@@ -69,51 +73,36 @@ class OrderController {
       cart.status = 'Completed';
       await cart.save({ session });
 
+      // Step 8: Send email to user
       let emailSent = false;
       let retries = 3;
       while (retries > 0 && !emailSent) {
         try {
-          // Check if cart.email is an object and extract email if necessary
-          let emailToSend = cart.email;
-          if (typeof cart.email === 'object' && cart.email.email) {
-            emailToSend = cart.email.email; // Extract the email if it's an object
-          }
-      
-          // Validate email format
-          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-          if (!emailRegex.test(emailToSend)) {
-            throw new Error(`Invalid email address provided: ${emailToSend}`);
-          }
-      
-          // Send email with retry logic
-          const emailResponse = await sendEmail({
-            to: emailToSend,
-            subject: 'Your Order Has Been Processed',
-            body: `Dear ${cart.userFirstName} ${cart.userLastName},\n\nYour order has been successfully processed.\n\nTracking ID: ${trackingNumber}\n\nThank you for shopping with us.`,
-          });
-      
-          if (emailResponse.success) {
-            logger.info(
-              `Order notification email sent to ${emailToSend} with Tracking ID ${trackingNumber}`
-            );
-            emailSent = true;
-          } else {
-            throw new Error(`Email service failed for user ${emailToSend}.`);
-          }
+          const emailBody = `
+            <p>Dear ${cart.userFirstName} ${cart.userLastName},</p>
+            <p>Your order has been successfully processed.</p>
+            <p><strong>Tracking ID:</strong> ${trackingNumber}</p>
+            <p>Thank you for shopping with us.</p>
+          `;
+
+          await sendEmail(userEmail, 'Your Order Has Been Processed', emailBody);
+
+          logger.info(`Order confirmation email sent to ${userEmail}`);
+          emailSent = true;
         } catch (emailError) {
           retries--;
           logger.error(
-            `Email sending failed on attempt ${4 - retries} for user ${cart.userId.email}: ${emailError.message}`
+            `Email sending failed on attempt ${4 - retries} for ${userEmail}: ${emailError.message}`
           );
+
           if (retries === 0) {
-            // If all retries fail, log and proceed with order creation
             logger.error(
-              `Failed to send order notification email to ${cart.userId.email} after 3 attempts.`
+              `Failed to send order confirmation email to ${userEmail} after 3 attempts.`
             );
           }
         }
       }
-      
+
       await session.commitTransaction(); // Commit transaction
       logger.info(`Order created for user ${userId} with Tracking ID: ${trackingNumber}`);
       return order;

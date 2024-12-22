@@ -289,7 +289,7 @@ const processPaymentSuccess = async (paymentData, userEmail) => {
 
     // Pass userEmail as a string to the email functions
     await sendPaymentSuccessEmail(userEmail, userName, amount); // Send success email
-    await updateCartAndCreateOrder(metadata, amount, reference, userName); // Pass entire metadata
+    await updateCartAndCreateOrder(metadata, amount, reference, userName, userEmail); // Pass entire metadata
     await updateStockAfterPayment('paid', metadata.cartId); // Update stock
     await sendInvoiceEmail(metadata, amount, userName, metadata.email); // Send invoice email after success
 
@@ -310,15 +310,15 @@ const processPaymentSuccess = async (paymentData, userEmail) => {
 
 
 
-
 /**
  * Updates the cart and creates an order after successful payment.
  * @param {object} metadata - Metadata containing cart details.
  * @param {number} amount - Payment amount.
  * @param {string} reference - Paystack payment reference.
  * @param {string} userName - Customer's full name.
+ * @param {string} userEmail - Customer's email address.
  */
-const updateCartAndCreateOrder = async (metadata, amount, reference, userName) => {
+const updateCartAndCreateOrder = async (metadata, amount, reference, userName, userEmail) => {
   // Destructure userId and cartId from metadata
   let { userId, cartId } = metadata;
 
@@ -329,11 +329,12 @@ const updateCartAndCreateOrder = async (metadata, amount, reference, userName) =
   }
 
   try {
-    // Ensure userId and cartId are strings
+    // Ensure userId, cartId, and userEmail are strings
     userId = String(userId);
     cartId = String(cartId);
+    userEmail = String(userEmail);
 
-    logger.info(`Updating cart and creating order for ${userName}. CartID: ${cartId}`);
+    logger.info(`Updating cart and creating order for ${userName}. CartID: ${cartId}, Email: ${userEmail}`);
 
     // Update the cart payment status and reference
     const cartUpdateResult = await CartModel.updateOne(
@@ -349,23 +350,26 @@ const updateCartAndCreateOrder = async (metadata, amount, reference, userName) =
       throw new Error('Cart update failed or CartID does not exist.');
     }
 
-    // Pass the correct arguments (cartId and userId) to create the order
-    const orderCreationResult = await OrderController.createOrder(cartId, userId);
+    // Log the successful cart update
+    logger.info(`Cart updated successfully for CartID: ${cartId}. Payment reference: ${reference}`);
+
+    // Create an order using the updated cart details
+    const orderCreationResult = await OrderController.createOrder(cartId, userId, userEmail);
 
     if (!orderCreationResult) {
       logger.warn(`Order creation failed for CartID: ${cartId}`);
       throw new Error('Order creation failed.');
     }
 
-    logger.info(`Order created successfully for ${userName} with CartID: ${cartId}`);
+    // Log the successful order creation
+    logger.info(`Order created successfully for ${userName} with CartID: ${cartId}, OrderID: ${orderCreationResult.orderId}`);
 
   } catch (error) {
+    // Log detailed error information
     logger.error(`Failed to update cart or create order for ${userName} - CartID: ${cartId}`, error);
     throw new Error('Order processing failed.');
   }
 };
-
-
 
 /**
  * Sends an invoice email after successful payment.
