@@ -194,11 +194,11 @@ const getAllCarts = async (req, res) => {
 
 // Fetch cart by ID
 const getCartById = async (req, res) => {
-  const { id } = req.params;
+  const { id } = req.params; // Cart ID is passed as a string
 
   try {
-    // Fetch the cart by ID and populate related user and items data
-    const cart = await CartModel.findById(id)
+    // Fetch the cart using the string ID and populate related user and items data
+    const cart = await CartModel.findOne({ cartId: id })
       .populate('userId', 'firstName lastName email')
       .populate('items.productId', 'name price description');
 
