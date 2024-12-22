@@ -7,7 +7,7 @@ const logger = require('../utils/logger');
  * @param {string} subject - Email subject. Defaults to 'Payment Received - Invoice' if not provided.
  * @param {string} htmlContent - HTML content of the email.
  */
-const sendEmail = async (userEmail, subject = 'Payment Received - Invoice', htmlContent) => {
+const sendEmail = async (userEmail, subject, htmlContent) => {
   try {
     // Log the user email being received
     logger.info(`Received userEmail: ${JSON.stringify(userEmail)}`);
@@ -42,7 +42,7 @@ const sendEmail = async (userEmail, subject = 'Payment Received - Invoice', html
     // Construct the email message
     const message = {
       from: sender, // Ensure `sender` is correctly defined in your mailtrap configuration
-      to: [userEmail], // Email recipient as an array of strings
+      to: [{ email: userEmail }], // Email recipient as an array of strings
       subject, // Email subject
       html: htmlContent, // HTML email body
     };
