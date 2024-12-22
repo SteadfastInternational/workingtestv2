@@ -1,4 +1,0 @@
-2024-12-22 04:51:10 [INFO]: Initiating payment for Miracle Emmanuel. CartID: c797b501-7316-4a2c-9396-f0f1ee30a596, Amount: ₦69.3, Email: officialmico500@gmail.com
-2024-12-22 04:51:10 [INFO]: Metadata: cartId: c797b501-7316-4a2c-9396-f0f1ee30a596, formattedAddress: 123 Main St, New York, NY, 10001, userName: Miracle Emmanuel, userId: 675ad7312d4e11dbe010cb82
-2024-12-22 04:51:11 [INFO]: Payment URL generated successfully for Miracle Emmanuel: https://checkout.paystack.com/mrzprdokw5hy6i6
-2024-12-22 04:51:30 [INFO]: Fetched cart by ID: c797b501-7316-4a2c-9396-f0f1ee30a596

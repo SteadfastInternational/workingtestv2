@@ -163,7 +163,7 @@ const getAllCarts = async (req, res) => {
   try {
     const carts = await Cart.find()
       .populate('userId', 'firstName lastName email')
-      .populate('items.productId', 'name price description');
+      .populate('items.productId', 'name price');
 
     const enrichedCarts = await Promise.all(
       carts.map(async (cart) => {
@@ -198,7 +198,7 @@ const getCartById = async (req, res) => {
   try {
     const cart = await Cart.findOne({ cartId: id })
       .populate('userId', 'firstName lastName email')
-      .populate('items.productId', 'name price description');
+      .populate('items.productId', 'name price');
 
     if (!cart) {
       return res.status(404).json({ message: 'Cart not found' });

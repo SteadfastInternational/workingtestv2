@@ -422,7 +422,12 @@ exports.searchProducts = async (req, res) => {
 
 exports.getProductById = async (req, res) => {
   try {
-    const { productId } = req.params; // Assuming productId is passed in URL params
+    const { productId } = req.params;
+
+    // Check if productId is provided
+    if (!productId) {
+      return res.status(400).json({ success: false, message: 'Product ID is required in the URL params.' });
+    }
 
     const product = await Product.findById(productId);
 

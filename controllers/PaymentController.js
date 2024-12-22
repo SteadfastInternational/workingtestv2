@@ -1,7 +1,7 @@
 const axios = require('axios');
 const crypto = require('crypto');
 const CartModel = require('../models/cart');
-const ProductModel = require('../models/products');
+const Product = require('../models/products');
 const OrderController = require('./OrderV2Controller');
 const { sendPaymentSuccessEmail, sendPaymentFailureEmail } = require('../mailtrap/email');
 const logger = require('../utils/logger');
@@ -443,23 +443,23 @@ const sendInvoiceEmail = async (metadata, amount, userName, userEmail) => {
 
 
 
-/**
- * Function to generate HTML for cart items.
- * @param {Array} items - Array of cart items.
- * @returns {string} - HTML string for the cart items.
- */
 const generateCartItemsHtml = async (items) => {
   let cartItemsHtml = '';
 
   if (Array.isArray(items) && items.length > 0) {
     for (const item of items) {
       try {
-        // Call the existing getProductById function to fetch product data
-        const productData = await getProductById(item.productId);
+        // Fetch product data directly from the database
+        const productData = await Product.findById(item.productId);
 
-        // Get the product image (use a default if not available)
-        const productImage = productData?.image || 'https://via.placeholder.com/80';
-        const productName = productData?.productName || item.productName;
+        if (!productData) {
+          console.error(`Product not found for productId: ${item.productId}`);
+          continue;
+        }
+
+        // Safely access product image
+        const productImage = productData?.image?.original || 'https://via.placeholder.com/80';
+        const productName = productData?.name || item.productName;
 
         // Ensure price and quantity are numbers before using them
         const price = parseFloat(item.price) || 0;
@@ -490,32 +490,6 @@ const generateCartItemsHtml = async (items) => {
 };
 
 
-/**
- * Handle refund request from the user.
- * @param {object} req - HTTP request object.
- * @param {object} res - HTTP response object.
- */
-const processRefund = async (req, res) => {
-  try {
-    const { paymentReference, amount } = req.body;
-
-    if (!paymentReference || !amount) {
-      return res.status(400).send('Payment reference and amount are required');
-    }
-
-    // Only admin can access refund route
-    const isAdmin = req.user && req.user.role === 'admin';
-    if (!isAdmin) {
-      return res.status(403).send('Unauthorized: Admin access required');
-    }
-
-    const refundResponse = await initiateRefund(paymentReference, amount);
-    res.status(200).send(refundResponse);
-  } catch (error) {
-    logger.error('Error processing refund', error);
-    res.status(500).send('Error processing refund');
-  }
-};
 
 /**
  * Initiates a refund process with Paystack.
@@ -523,7 +497,7 @@ const processRefund = async (req, res) => {
  * @param {number} amount - Refund amount.
  * @returns {object} Refund response.
  */
-const initiateRefund = async (paymentReference, amount) => {
+const processRefund = async (paymentReference, amount) => {
   try {
     const response = await axios.post(
       'https://api.paystack.co/refund',
