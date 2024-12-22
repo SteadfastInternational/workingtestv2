@@ -32,7 +32,7 @@ const corsOptions = {
   origin: (origin, callback) => {
     const allowedOrigins = [
       process.env.CLIENT_URL || "https://www.steadfast.ng",
-      "http://localhost:4100",
+      "http://localhost:4100",  "http://localhost:3000",
     ];
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
