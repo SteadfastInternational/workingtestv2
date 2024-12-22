@@ -161,13 +161,13 @@ const paymentUrl = await initiatePayment(
 // Fetch all carts
 const getAllCarts = async (req, res) => {
   try {
-    const carts = await CartModel.find()
+    const carts = await Cart.find()
       .populate('userId', 'firstName lastName email')
       .populate('items.productId', 'name price description');
 
     const enrichedCarts = await Promise.all(
       carts.map(async (cart) => {
-        const userAddress = await AddressModel.findOne({ userId: cart.userId._id }).sort({ createdAt: 1 });
+        const userAddress = await Address.findOne({ userId: cart.userId._id }).sort({ createdAt: 1 });
         const formattedAddress = userAddress ? userAddress.formattedAddress : 'No address available';
 
         return {
@@ -192,13 +192,11 @@ const getAllCarts = async (req, res) => {
   }
 };
 
-// Fetch cart by ID
 const getCartById = async (req, res) => {
   const { id } = req.params; // Cart ID is passed as a string
 
   try {
-    // Fetch the cart using the string ID and populate related user and items data
-    const cart = await CartModel.findOne({ cartId: id })
+    const cart = await Cart.findOne({ cartId: id })
       .populate('userId', 'firstName lastName email')
       .populate('items.productId', 'name price description');
 
@@ -206,11 +204,9 @@ const getCartById = async (req, res) => {
       return res.status(404).json({ message: 'Cart not found' });
     }
 
-    // Fetch the user's delivery address
-    const userAddress = await AddressModel.findOne({ userId: cart.userId._id }).sort({ createdAt: 1 });
+    const userAddress = await Address.findOne({ userId: cart.userId._id }).sort({ createdAt: 1 });
     const formattedAddress = userAddress ? userAddress.formattedAddress : 'No address available';
 
-    // Enrich cart data with formatted address and item details
     const enrichedCart = {
       ...cart.toObject(),
       userName: `${cart.userId.firstName} ${cart.userId.lastName}`,
@@ -222,15 +218,14 @@ const getCartById = async (req, res) => {
       })),
     };
 
-    // Logging for success
     logger.info(`Fetched cart by ID: ${id}`);
     res.status(200).json(enrichedCart);
   } catch (error) {
-    // Error handling and logging
     logger.error(`Error fetching cart by ID: ${error.message}`);
     res.status(500).json({ message: 'Failed to fetch cart', error: error.message });
   }
 };
+
 
 
 module.exports = { createCart, getAllCarts, getCartById };
