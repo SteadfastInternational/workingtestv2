@@ -291,7 +291,7 @@ const processPaymentSuccess = async (paymentData, userEmail) => {
     await sendPaymentSuccessEmail(userEmail, userName, amount); // Send success email
     await updateCartAndCreateOrder(metadata, amount, reference, userName, userEmail); // Pass entire metadata
     await updateStockAfterPayment('paid', metadata.cartId); // Update stock
-    await sendInvoiceEmail(metadata, amount, userName, metadata.email); // Send invoice email after success
+    await sendInvoiceEmail(metadata, amount, userName, userEmail); // Send invoice email after success
 
     // Log the completion of payment processing
     logger.info(`Payment success processing complete for ${userName}`);
@@ -376,17 +376,16 @@ const updateCartAndCreateOrder = async (metadata, amount, reference, userName, u
  * @param {object} metadata - Metadata containing user and cart info.
  * @param {number} amount - Total payment amount.
  * @param {string} userName - Customer's full name.
- * @param {string} metadata.email - Customer's email address.
+ * @param {string} userEmail - Customer's email address.
  */
-const sendInvoiceEmail = async (metadata, amount, userName) => {
+const sendInvoiceEmail = async (metadata, amount, userName, userEmail) => {
   try {
     // Log the metadata to ensure email is present
     console.log("Received metadata:", metadata);
 
-    // Check if email exists in metadata
-    let userEmail = metadata.email;
+    // Use the passed userEmail instead of extracting it from metadata
     if (!userEmail) {
-      throw new Error('Email address is missing in metadata.');
+      throw new Error('Email address is missing.');
     }
 
     // Log the userEmail to see its value before any checks or validation
@@ -419,7 +418,7 @@ const sendInvoiceEmail = async (metadata, amount, userName) => {
       .replace('{{totalAmount}}', amount && !isNaN(amount) ? amount.toFixed(2) : '0.00');
 
     // Send the email, passing userEmail as the recipient
-    await sendEmail(userEmail, subject , invoiceHtml);
+    await sendEmail(userEmail, subject, invoiceHtml);
 
     console.log(`Invoice email sent to ${userEmail}`);
   } catch (error) {
@@ -428,7 +427,6 @@ const sendInvoiceEmail = async (metadata, amount, userName) => {
     throw new Error(`Error sending invoice email: ${error.message || error}`);
   }
 };
-
 
 
 
