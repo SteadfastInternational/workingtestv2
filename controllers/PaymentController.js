@@ -409,6 +409,9 @@ const sendInvoiceEmail = async (metadata, amount, userName, userEmail) => {
     // Generate the cart items HTML
     const cartItemsHtml = await generateCartItemsHtml(cartItems);
 
+    // Define the subject for the email
+    const subject = `Invoice for Your Purchase`;
+
     // Generate the invoice HTML using the template and replace placeholders
     const invoiceHtml = invoiceTemplate
       .replace('{{name}}', userName || 'Unknown User')
@@ -427,6 +430,7 @@ const sendInvoiceEmail = async (metadata, amount, userName, userEmail) => {
     throw new Error(`Error sending invoice email: ${error.message || error}`);
   }
 };
+
 
 
 
