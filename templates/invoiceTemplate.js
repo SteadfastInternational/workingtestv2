@@ -77,6 +77,12 @@ const invoiceTemplate = `
       vertical-align: middle;
     }
 
+    .product-image {
+      width: 50px;
+      height: 50px;
+      object-fit: cover;
+    }
+
     .total-summary {
       text-align: right;
       font-size: 18px;
@@ -143,7 +149,8 @@ const invoiceTemplate = `
     <table>
       <thead>
         <tr>
-          <th>Product</th>
+          <th>Image</th>
+           <th>Product Name</th>
           <th>Quantity</th>
           <th>Price</th>
           <th>Total</th>

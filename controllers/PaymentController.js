@@ -425,7 +425,8 @@ const sendInvoiceEmail = async (metadata, amount, userName, userEmail) => {
       .replace('{{formattedAddress}}', metadata.formattedAddress || 'No address provided')
       .replace('{{email}}', userEmail)
       .replace('{{sanitizedCartItemsHtml}}', cartItemsHtml)
-      .replace('{{totalAmount}}', amount && !isNaN(amount) ? amount.toFixed(2) : '0.00');
+      .replace('{{totalAmount}}', amount && !isNaN(amount) ? (amount / 100).toFixed(2) : '0.00');
+
 
     // Send the email, passing userEmail as the recipient
     await sendEmail(userEmail, subject, invoiceHtml);
