@@ -9,7 +9,6 @@ const invoiceTemplate = require('../templates/invoiceTemplate');
 const { updateStockAfterPayment } = require('./cartV2Controller'); // Import the stock update function
 const { sendEmail } = require('../utils/emailUtils');
 const {getProductById} = require('./productController')
-const {getCartById} = require('./cartController');
 
 
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
@@ -373,6 +372,8 @@ const updateCartAndCreateOrder = async (metadata, amount, reference, userName, u
   }
 };
 
+
+
 /**
  * Sends an invoice email after successful payment.
  * @param {object} metadata - Metadata containing user and cart info.
@@ -398,10 +399,15 @@ const sendInvoiceEmail = async (metadata, amount, userName, userEmail) => {
     const cartId = metadata.cartId;
     let cartItems = [];
 
-    // Fetch cart items by cartId (using existing controller)
+    // Fetch cart items by cartId (using the updated getCartById function)
     if (cartId) {
-      // Assuming the existing controller function is available as `fetchCartById`
-      cartItems = await getCartById(cartId);
+      const response = await fetch(`https://workingtestv2.onrender.com/api/cart/${cartId}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch cart details');
+      }
+
+      const cartData = await response.json();
+      cartItems = cartData.items || [];
     }
 
     // Ensure cartItems is an array before passing it to the function
@@ -431,6 +437,11 @@ const sendInvoiceEmail = async (metadata, amount, userName, userEmail) => {
     throw new Error(`Error sending invoice email: ${error.message || error}`);
   }
 };
+
+
+
+
+
 
 /**
  * Function to generate HTML for cart items.
@@ -477,9 +488,6 @@ const generateCartItemsHtml = async (items) => {
 
   return cartItemsHtml;
 };
-
-
-
 
 
 /**

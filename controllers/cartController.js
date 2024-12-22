@@ -197,6 +197,7 @@ const getCartById = async (req, res) => {
   const { id } = req.params;
 
   try {
+    // Fetch the cart by ID and populate related user and items data
     const cart = await CartModel.findById(id)
       .populate('userId', 'firstName lastName email')
       .populate('items.productId', 'name price description');
@@ -205,9 +206,11 @@ const getCartById = async (req, res) => {
       return res.status(404).json({ message: 'Cart not found' });
     }
 
+    // Fetch the user's delivery address
     const userAddress = await AddressModel.findOne({ userId: cart.userId._id }).sort({ createdAt: 1 });
     const formattedAddress = userAddress ? userAddress.formattedAddress : 'No address available';
 
+    // Enrich cart data with formatted address and item details
     const enrichedCart = {
       ...cart.toObject(),
       userName: `${cart.userId.firstName} ${cart.userId.lastName}`,
@@ -219,12 +222,15 @@ const getCartById = async (req, res) => {
       })),
     };
 
+    // Logging for success
     logger.info(`Fetched cart by ID: ${id}`);
     res.status(200).json(enrichedCart);
   } catch (error) {
+    // Error handling and logging
     logger.error(`Error fetching cart by ID: ${error.message}`);
     res.status(500).json({ message: 'Failed to fetch cart', error: error.message });
   }
 };
+
 
 module.exports = { createCart, getAllCarts, getCartById };
