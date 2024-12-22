@@ -1,121 +1,261 @@
-const Admin = require('../models/admin');
-const asyncHandler = require('express-async-handler');
-const jwt = require('jsonwebtoken');
-const logger = require('../utils/logger'); // Import the logger
+const bcrypt = require("bcryptjs");
+const dayjs = require("dayjs");
+const utc = require("dayjs/plugin/utc");
+dayjs.extend(utc);
+const jwt = require("jsonwebtoken");
+const { signInToken, tokenForVerify, sendEmail } = require("../config/auth");
+const Admin = require("../models/admin");
 
-// SECRET for JWT
-const JWT_SECRET = process.env.JWT_SECRET || 'your_secret_here';
-
-// Create a new admin
-exports.createAdmin = asyncHandler(async (req, res) => {
-  const { username, email, password, role } = req.body;
-
-  const adminExists = await Admin.findOne({ email });
-
-  if (adminExists) {
-    logger.warn(`Admin creation failed: Admin with email ${email} already exists.`);
-    return res.status(400).json({ message: 'Admin with this email already exists' });
+const registerAdmin = async (req, res) => {
+  try {
+    const isAdded = await Admin.findOne({ email: req.body.email });
+    if (isAdded) {
+      return res.status(403).send({
+        message: "This Email already Added!",
+      });
+    } else {
+      const newStaff = new Admin({
+        name: req.body.name,
+        email: req.body.email,
+        role: req.body.role,
+        password: bcrypt.hashSync(req.body.password),
+      });
+      const staff = await newStaff.save();
+      const token = signInToken(staff);
+      res.send({
+        token,
+        _id: staff._id,
+        name: staff.name,
+        email: staff.email,
+        role: staff.role,
+        joiningData: Date.now(),
+      });
+    }
+  } catch (err) {
+    res.status(500).send({
+      message: err.message,
+    });
   }
+};
 
-  const admin = await Admin.create({
-    username,
-    email,
-    password,
-    role,
-  });
+const loginAdmin = async (req, res) => {
+  try {
+    const admin = await Admin.findOne({ email: req.body.email });
+    if (admin && bcrypt.compareSync(req.body.password, admin.password)) {
+      const token = signInToken(admin);
+      res.send({
+        token,
+        _id: admin._id,
+        name: admin.name,
+        phone: admin.phone,
+        email: admin.email,
+        image: admin.image,
+      });
+    } else {
+      res.status(401).send({
+        message: "Invalid Email or password!",
+      });
+    }
+  } catch (err) {
+    res.status(500).send({
+      message: err.message,
+    });
+  }
+};
 
-  if (admin) {
-    logger.info(`Admin created successfully: ${admin.username} with email ${admin.email}`);
-    res.status(201).json({
-      id: admin._id,
-      username: admin.username,
-      email: admin.email,
-      role: admin.role,
+const forgetPassword = async (req, res) => {
+  const isAdded = await Admin.findOne({ email: req.body.verifyEmail });
+  if (!isAdded) {
+    return res.status(404).send({
+      message: "Admin/Staff Not found with this email!",
     });
   } else {
-    logger.error('Admin creation failed: Invalid data passed.');
-    res.status(500).json({ message: 'Invalid data passed' });
+    const token = tokenForVerify(isAdded);
+    const body = {
+      from: process.env.EMAIL_USER,
+      to: `${req.body.verifyEmail}`,
+      subject: "Password Reset",
+      html: `<h2>Hello ${req.body.verifyEmail}</h2>
+      <p>A request has been received to change the password for your <strong>Kachabazar</strong> account </p>
+
+        <p>This link will expire in <strong> 15 minute</strong>.</p>
+
+        <p style="margin-bottom:20px;">Click this link for reset your password</p>
+
+        <a href=${process.env.ADMIN_URL}/reset-password/${token}  style="background:#22c55e;color:white;border:1px solid #22c55e; padding: 10px 15px; border-radius: 4px; text-decoration:none;">Reset Password </a>
+
+        
+        <p style="margin-top: 35px;">If you did not initiate this request, please contact us immediately at support@kachabazar.com</p>
+
+        <p style="margin-bottom:0px;">Thank you</p>
+        <strong>Kachabazar Team</strong>
+             `,
+    };
+    const message = "Please check your email to reset password!";
+    sendEmail(body, res, message);
   }
-});
+};
 
-// Authenticate an admin
-exports.loginAdmin = asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
+const resetPassword = async (req, res) => {
+  const token = req.body.token;
+  const { email } = jwt.decode(token);
+  const staff = await Admin.findOne({ email: email });
 
-  const admin = await Admin.findOne({ email });
+  if (token) {
+    jwt.verify(token, process.env.JWT_SECRET_FOR_VERIFY, (err, decoded) => {
+      if (err) {
+        return res.status(500).send({
+          message: "Token expired, please try again!",
+        });
+      } else {
+        staff.password = bcrypt.hashSync(req.body.newPassword);
+        staff.save();
+        res.send({
+          message: "Your password change successful, you can login now!",
+        });
+      }
+    });
+  }
+};
 
-  if (admin && (await admin.matchPassword(password))) {
-    const token = jwt.sign(
-      { id: admin._id, role: admin.role },
-      JWT_SECRET,
-      { expiresIn: '1h' }
+const addStaff = async (req, res) => {
+  // console.log("add staf....", req.body.staffData);
+  try {
+    const isAdded = await Admin.findOne({ email: req.body.email });
+    if (isAdded) {
+      return res.status(500).send({
+        message: "This Email already Added!",
+      });
+    } else {
+      const newStaff = new Admin({
+        name: { ...req.body.name },
+        email: req.body.email,
+        password: bcrypt.hashSync(req.body.password),
+        phone: req.body.phone,
+        joiningDate: req.body.joiningDate,
+        role: req.body.role,
+        image: req.body.image,
+      });
+      await newStaff.save();
+      res.status(200).send({
+        message: "Staff Added Successfully!",
+      });
+    }
+  } catch (err) {
+    res.status(500).send({
+      message: err.message,
+    });
+    // console.log("error", err);
+  }
+};
+
+const getAllStaff = async (req, res) => {
+  // console.log('allamdin')
+  try {
+    const admins = await Admin.find({}).sort({ _id: -1 });
+    res.send(admins);
+  } catch (err) {
+    res.status(500).send({
+      message: err.message,
+    });
+  }
+};
+
+const getStaffById = async (req, res) => {
+  try {
+    const admin = await Admin.findById(req.params.id);
+    res.send(admin);
+  } catch (err) {
+    res.status(500).send({
+      message: err.message,
+    });
+  }
+};
+
+const updateStaff = async (req, res) => {
+  try {
+    const admin = await Admin.findOne({ _id: req.params.id });
+
+    if (admin) {
+      admin.name = { ...admin.name, ...req.body.name };
+      admin.email = req.body.email;
+      admin.phone = req.body.phone;
+      admin.role = req.body.role;
+      admin.joiningData = req.body.joiningDate;
+      // admin.password =
+      //   req.body.password !== undefined
+      //     ? bcrypt.hashSync(req.body.password)
+      //     : admin.password;
+
+      admin.image = req.body.image;
+      const updatedAdmin = await admin.save();
+      const token = signInToken(updatedAdmin);
+      res.send({
+        token,
+        message: "Staff Updated Successfully!",
+        _id: updatedAdmin._id,
+        name: updatedAdmin.name,
+        email: updatedAdmin.email,
+        role: updatedAdmin.role,
+        image: updatedAdmin.image,
+      });
+    } else {
+      res.status(404).send({
+        message: "This Staff not found!",
+      });
+    }
+  } catch (err) {
+    res.status(500).send({
+      message: err.message,
+    });
+  }
+};
+
+const deleteStaff = (req, res) => {
+  Admin.deleteOne({ _id: req.params.id }, (err) => {
+    if (err) {
+      res.status(500).send({
+        message: err.message,
+      });
+    } else {
+      res.status(200).send({
+        message: "Admin Deleted Successfully!",
+      });
+    }
+  });
+};
+
+const updatedStatus = async (req, res) => {
+  try {
+    const newStatus = req.body.status;
+
+    await Admin.updateOne(
+      { _id: req.params.id },
+      {
+        $set: {
+          status: newStatus,
+        },
+      }
     );
-
-    logger.info(`Admin login successful: ${admin.username} with email ${admin.email}`);
-    res.status(200).json({
-      id: admin._id,
-      token,
+    res.send({
+      message: `Staff ${newStatus} Successfully!`,
     });
-  } else {
-    logger.warn(`Admin login failed: Invalid email or password for ${email}`);
-    res.status(401).json({ message: 'Invalid email or password' });
+  } catch (err) {
+    res.status(500).send({
+      message: err.message,
+    });
   }
-});
+};
 
-// Fetch all admins with pagination
-exports.getAllAdmins = asyncHandler(async (req, res) => {
-  const { page = 1, limit = 10 } = req.query;
-
-  const admins = await Admin.find()
-    .limit(parseInt(limit))
-    .skip((parseInt(page) - 1) * parseInt(limit));
-
-  logger.info(`Fetched all admins - Page: ${page}, Limit: ${limit}`);
-  
-  res.status(200).json({
-    admins,
-    page: parseInt(page),
-    limit: parseInt(limit),
-  });
-});
-
-// Update an admin's details
-exports.updateAdmin = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  const { username, email, role, status } = req.body;
-
-  const admin = await Admin.findById(id);
-
-  if (!admin) {
-    logger.warn(`Admin update failed: Admin with ID ${id} not found.`);
-    return res.status(404).json({ message: 'Admin not found' });
-  }
-
-  if (username) admin.username = username;
-  if (email) admin.email = email;
-  if (role) admin.role = role;
-  if (status) admin.status = status;
-
-  const updatedAdmin = await admin.save();
-
-  logger.info(`Admin updated successfully: ${updatedAdmin.username} (ID: ${updatedAdmin._id})`);
-
-  res.status(200).json(updatedAdmin);
-});
-
-// Delete an admin
-exports.deleteAdmin = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-
-  const admin = await Admin.findById(id);
-
-  if (!admin) {
-    logger.warn(`Admin deletion failed: Admin with ID ${id} not found.`);
-    return res.status(404).json({ message: 'Admin not found' });
-  }
-
-  await admin.remove();
-  logger.info(`Admin deleted successfully: ${admin.username} (ID: ${admin._id})`);
-
-  res.status(200).json({ message: 'Admin deleted successfully' });
-});
+module.exports = {
+  registerAdmin,
+  loginAdmin,
+  forgetPassword,
+  resetPassword,
+  addStaff,
+  getAllStaff,
+  getStaffById,
+  updateStaff,
+  deleteStaff,
+  updatedStatus,
+};

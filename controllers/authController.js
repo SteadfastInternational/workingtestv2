@@ -50,37 +50,49 @@ exports.signup = async (req, res) => {
   }
 };
 
-// Login
+
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Check for email and password
     if (!email || !password) {
       return res.status(400).json({
         status: 'fail',
-        message: 'Please provide email and password',
+        message: 'Email and password are required',
       });
     }
 
-    // Find user and check password
     const user = await User.findOne({ email }).select('+password');
     if (!user || !(await user.correctPassword(password, user.password))) {
       return res.status(401).json({
         status: 'fail',
-        message: 'Incorrect email or password',
+        message: 'Invalid email or password',
       });
     }
 
-    // Send JWT token to the user
-    createSendToken(user, 200, res);
-  } catch (err) {
-    res.status(400).json({
+    const token = signToken(user._id);
+    res.status(200).json({
+      status: 'success',
+      jwt: token,
+      remember_me: req.body.remember_me || false, // Match frontend expectation
+      data: {
+        user: {
+          id: user._id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+        },
+      },
+    });
+  } catch (error) {
+    console.error('Login Error:', error);
+    res.status(500).json({
       status: 'fail',
-      message: err.message,
+      message: 'An error occurred during login',
     });
   }
 };
+
 
 // Forgot Password
 exports.forgotPassword = async (req, res) => {
@@ -168,3 +180,27 @@ exports.resetPassword = async (req, res) => {
     });
   }
 };
+
+
+
+exports.getAllUsers = async () => {
+  try {
+    // Fetch all users from the database
+    const users = await User.find();
+
+    if (!users || users.length === 0) {
+      throw new Error("No users found");
+    }
+
+    // Map the user data to return only the necessary fields with default values
+    return users.map((user) => ({
+      name: user.firstName + " " + user.lastName,
+      email: user.email,
+      phone: user.phone || "Not Provided",  // Default value if phone is not available
+      address: user.address || "Not Provided",  // Default value if address is not available
+    }));
+  } catch (err) {
+    throw new Error("An error occurred while fetching users: " + err.message);
+  }
+};
+

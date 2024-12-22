@@ -27,13 +27,23 @@ dotenv.config();
 connectDB();
 
 const app = express();
-
-// Configure CORS
+// Dynamic CORS origin validation
 const corsOptions = {
-  origin: process.env.CLIENT_URL || "https://www.steadfast.ng", // Use environment variable for flexibility
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      process.env.CLIENT_URL || "https://www.steadfast.ng",
+      "http://localhost:4100",
+    ];
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type", "Authorization"],
 };
+
 app.use(cors(corsOptions));
 
 // Middleware for JSON and URL-encoded bodies
@@ -67,7 +77,7 @@ if (process.env.NODE_ENV === "development") {
 
 // Routes
 app.use("/api/products", productRoutes); // Product routes
-app.use("/api/orders", orderRoutes); // Order routes (added `/api` for consistency)
+app.use("/api/order", orderRoutes); // Order routes (added `/api` for consistency)
 app.use("/api/products/search/:term", productController.searchProducts); // Product search route
 app.use("/api/categories", categoryRoutes); // Category routes
 app.use("/api/payment", paymentRoutes); // Payment routes

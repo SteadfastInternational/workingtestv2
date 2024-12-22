@@ -1,0 +1,27 @@
+2024-12-22 21:05:01 [WARN]: Admin login failed: Invalid email or password for admin@gmail.com
+2024-12-22 21:08:26 [INFO]: Admin created successfully: adminUser112 with email admin112@example.com
+2024-12-22 21:08:49 [WARN]: Admin login failed: Invalid email or password for admin112@example.com
+2024-12-22 21:09:01 [INFO]: Admin login successful: adminUser112 with email admin112@example.com
+2024-12-22 21:09:09 [WARN]: Admin login failed: Invalid email or password for admin@gmail.com
+2024-12-22 21:09:21 [WARN]: Admin login failed: Invalid email or password for admin112@gmail.com
+2024-12-22 21:09:25 [WARN]: Admin login failed: Invalid email or password for admin112@gmail.com
+2024-12-22 21:09:47 [INFO]: Admin login successful: adminUser112 with email admin112@example.com
+2024-12-22 21:14:13 [WARN]: Admin login failed: Invalid email or password for admin@gmail.com
+2024-12-22 21:14:32 [INFO]: Admin login successful: adminUser112 with email admin112@example.com
+2024-12-22 21:14:40 [WARN]: Admin login failed: Invalid email or password for admin@gmail.com
+2024-12-22 21:14:56 [INFO]: Admin login successful: adminUser112 with email admin112@example.com
+2024-12-22 21:19:01 [INFO]: Admin login successful: adminUser112 with email admin112@example.com
+2024-12-22 21:19:31 [INFO]: Admin login successful: adminUser112 with email admin112@example.com
+2024-12-22 21:19:55 [INFO]: Admin login successful: adminUser112 with email admin112@example.com
+2024-12-22 21:22:52 [WARN]: Admin login failed: Invalid email or password for admin@gmail.com
+2024-12-22 21:23:05 [INFO]: Admin login successful: adminUser112 with email admin112@example.com
+2024-12-22 21:23:10 [WARN]: Admin login failed: Invalid email or password for admin@gmail.com
+2024-12-22 21:24:30 [WARN]: Admin login failed: Invalid email or password for admin@gmail.com
+2024-12-22 21:24:36 [WARN]: Admin login failed: Invalid email or password for admin@gmail.com
+2024-12-22 21:24:49 [WARN]: Admin login failed: Invalid email or password for admin112@example.com
+2024-12-22 21:24:57 [INFO]: Admin login successful: adminUser112 with email admin112@example.com
+2024-12-22 21:27:43 [WARN]: Admin login failed: Invalid email or password for admin@gmail.com
+2024-12-22 21:28:00 [INFO]: Admin login successful: adminUser112 with email admin112@example.com
+2024-12-22 21:28:07 [WARN]: Admin login failed: Invalid email or password for admin@gmail.com
+2024-12-22 21:33:05 [INFO]: Admin login successful: adminUser112 with email admin112@example.com
+2024-12-22 21:33:07 [WARN]: Admin login failed: Invalid email or password for admin@gmail.com

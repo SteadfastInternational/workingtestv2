@@ -1,31 +1,47 @@
-const express = require('express');
-const { 
-  createAdmin, 
-  loginAdmin, 
-  getAllAdmins, 
-  updateAdmin, 
-  deleteAdmin 
-} = require('../controllers/adminController');
-const isAdmin = require('../middleware/adminMiddleware'); // Import the middleware
-
+const express = require("express");
 const router = express.Router();
+const {
+  registerAdmin,
+  loginAdmin,
+  forgetPassword,
+  resetPassword,
+  addStaff,
+  getAllStaff,
+  getStaffById,
+  updateStaff,
+  deleteStaff,
+  updatedStatus,
+} = require("../controllers/adminController");
 
-// Route: Create an admin account
-// No middleware here because this is for admin creation, not requiring an existing admin user
-router.post('/create', createAdmin);
 
-// Route: Admin login
-// No middleware for login either
-router.post('/login', loginAdmin);
+//register a staff
+router.post("/register", registerAdmin);
 
-// Route: Fetch all admins (with pagination support)
-// Apply the isAdmin middleware to check if the user is an admin
-router.get('/all', isAdmin, getAllAdmins);
+//login a admin
+router.post("/login", loginAdmin);
 
-// Route: Update an admin
-router.put('/update/:id', isAdmin, updateAdmin);
+//forget-password
+router.put("/forget-password", forgetPassword);
 
-// Route: Delete an admin
-router.delete('/delete/:id', isAdmin, deleteAdmin);
+//reset-password
+router.put("/reset-password", resetPassword);
+
+//add a staff
+router.post("/add", addStaff);
+
+//get all staff
+router.get("/", getAllStaff);
+
+//get a staff
+router.post("/:id", getStaffById);
+
+//update a staff
+router.put("/:id", updateStaff);
+
+//update staf status
+router.put("/update-status/:id", updatedStatus);
+
+//delete a staff
+router.delete("/:id", deleteStaff);
 
 module.exports = router;
