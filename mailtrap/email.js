@@ -95,8 +95,7 @@ const sendWelcomeEmail = async (email, firstName) => {
  * @param {number} amount - The amount paid.
  */
 const sendPaymentSuccessEmail = async (userEmail, userName, amount) => {
-  // Log the userEmail for debugging purposes
-  console.log("Received userEmail:", userEmail);
+  
 
   // Ensure userEmail is a string, not an object
   if (typeof userEmail !== 'string') {
@@ -156,7 +155,7 @@ const sendPaymentSuccessEmail = async (userEmail, userName, amount) => {
  */
 const sendPaymentFailureEmail = async (userEmail, userName, amount) => {
   // Log the userEmail for debugging purposes
-  console.log("Received userEmail:", userEmail);
+ 
 
   // Ensure userEmail is a string, not an object
   if (typeof userEmail !== 'string') {

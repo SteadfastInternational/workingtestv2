@@ -80,9 +80,7 @@ app.use("/coupons", couponRoutes); // Coupon Fetching Routes
 
 // Paystack Webhook Route (added)
 app.post("/api/payment/paystack/webhook", async (req, res) => {
-  // Log headers and rawBody for debugging
-  console.log('Received webhook headers:', req.headers);
-  console.log('Received webhook body:', req.body); // Log the parsed body if available
+  
 
   // Check if rawBody exists
   if (!req.rawBody) {

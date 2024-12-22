@@ -380,16 +380,13 @@ const updateCartAndCreateOrder = async (metadata, amount, reference, userName, u
  */
 const sendInvoiceEmail = async (metadata, amount, userName, userEmail) => {
   try {
-    // Log the metadata to ensure email is present
-    console.log("Received metadata:", metadata);
+
 
     // Use the passed userEmail instead of extracting it from metadata
     if (!userEmail) {
       throw new Error('Email address is missing.');
     }
 
-    // Log the userEmail to see its value before any checks or validation
-    console.log("User email before validation:", userEmail);
 
     // Ensure userEmail is a string and validate the email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -397,8 +394,7 @@ const sendInvoiceEmail = async (metadata, amount, userName, userEmail) => {
       throw new Error(`Invalid email address provided: ${userEmail}`);
     }
 
-    // Early return if email validation fails
-    console.log(`Valid email: ${userEmail}`);
+   
 
     // Log the invoice generation
     console.log(`Preparing invoice email for ${userName || 'Unknown User'}, CartID: ${metadata.cartId}`);
