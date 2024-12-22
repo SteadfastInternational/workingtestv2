@@ -1,4 +1,4 @@
-const Coupon = require('../models/coupon'); // Ensure you have the Coupon model
+const Coupon = require('../models/coupon');
 const Cart = require('../models/cart');
 const Product = require('../models/products');
 const logger = require('../utils/logger');
@@ -15,8 +15,8 @@ const updateStockAfterPayment = async (paymentStatus, cartId) => {
     // Start the transaction
     session.startTransaction();
 
-    // Find the cart directly using the string cartId
-    const cart = await Cart.findOne({ _id: cartId }).session(session);
+    // Find the cart using cartId (custom field) instead of _id
+    const cart = await Cart.findOne({ cartId: cartId }).session(session);  // <-- Changed here
     if (!cart) {
       logger.error(`Cart with ID ${cartId} not found`);
       return;
