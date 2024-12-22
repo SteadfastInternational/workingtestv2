@@ -4,7 +4,6 @@ const Product = require('../models/products');
 const logger = require('../utils/logger');
 const mongoose = require('mongoose');
 
-
 const updateStockAfterPayment = async (paymentStatus, cartId) => {
   const session = await mongoose.startSession();
   try {
@@ -16,8 +15,8 @@ const updateStockAfterPayment = async (paymentStatus, cartId) => {
     // Start the transaction
     session.startTransaction();
 
-    // Find the cart
-    const cart = await Cart.findById(cartId).session(session);
+    // Find the cart directly using the string cartId
+    const cart = await Cart.findOne({ _id: cartId }).session(session);
     if (!cart) {
       logger.error(`Cart with ID ${cartId} not found`);
       return;
