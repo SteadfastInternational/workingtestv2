@@ -442,7 +442,6 @@ exports.searchProducts = async (req, res) => {
 
 
 
-
 exports.getProductById = async (req, res) => {
   try {
     const { productId } = req.params;
@@ -452,18 +451,25 @@ exports.getProductById = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Product ID is required in the URL params.' });
     }
 
+    // Validate productId as a valid MongoDB ObjectId
+    if (!mongoose.Types.ObjectId.isValid(productId)) {
+      return res.status(400).json({ success: false, message: 'Invalid Product ID format.' });
+    }
+
+    // Fetch product from the database
     const product = await Product.findById(productId);
 
     if (!product) {
       return res.status(404).json({ success: false, message: `Product not found for productId: ${productId}` });
     }
 
+    // Return the product data
     return res.json({ success: true, product });
   } catch (err) {
     console.error("Error fetching product data:", err);
-    return res.status(500).json({ success: false, message: err.message });
+    return res.status(500).json({ success: false, message: 'An error occurred while fetching the product data.' });
   }
-};
+},
 
 
 
