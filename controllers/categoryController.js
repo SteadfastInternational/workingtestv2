@@ -178,8 +178,22 @@ const updateCategory = async (req, res) => {
 // Controller to fetch all categories
 const getAllCategories = async (req, res) => {
   try {
-    // Fetch all categories from the database
-    const categories = await Category.find();
+    // Check if any query parameters are present for filtering
+    const { name, slug } = req.query;
+
+    // Build filter object based on query parameters
+    const filter = {};
+
+    if (name) {
+      filter.name = { $regex: name, $options: 'i' }; // Case-insensitive search by name
+    }
+
+    if (slug) {
+      filter.slug = { $regex: slug, $options: 'i' }; // Case-insensitive search by slug
+    }
+
+    // Fetch categories from the database, apply filter if provided
+    const categories = await Category.find(filter);
 
     // Return categories in JSON format
     res.status(200).json({
