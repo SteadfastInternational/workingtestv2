@@ -3,24 +3,22 @@ const productController = require('../controllers/productController'); // Adjust
 
 const router = express.Router();
 
-// Create a new product
+// Route to create a new product
 router.post('/create', productController.createProduct);
 
-// Update an existing product
+// Route to update an existing product
 router.put('/update/:productId', productController.updateProduct);
 
-// Fetch all products (with pagination and sorting)
+// Route to fetch all products with optional pagination and sorting
 router.get('/all', productController.getAllProducts);
 
-// Search products by name, slug, or tags
+// Route to search products by name, slug, or tags
 router.get('/search/:searchTerm', productController.searchProducts);
 
-// Fetch a single product by its ID
-router.get('/:productId', productController.getProductById);  // Added route to get a product by ID
+// Route to fetch a single product by its ID
+router.get('/id/:productId', productController.getProductById); // Adjusted path for clarity
 
-
-// Define the route for fetching product by slug
-router.get('/product/:slug', productController.getProductBySlug);
-
+// Route to fetch a single product by its slug
+router.get('/slug/:slug', productController.getProductBySlug); // Adjusted path for clarity
 
 module.exports = router;

@@ -446,54 +446,66 @@ exports.getProductById = async (req, res) => {
   try {
     const { productId } = req.params;
 
-    // Check if productId is provided
     if (!productId) {
-      return res.status(400).json({ success: false, message: 'Product ID is required in the URL params.' });
+      return res.status(400).json({
+        success: false,
+        message: "Product ID is required in the URL params.",
+      });
     }
 
-    // Validate productId as a valid MongoDB ObjectId
     if (!mongoose.Types.ObjectId.isValid(productId)) {
-      return res.status(400).json({ success: false, message: 'Invalid Product ID format.' });
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Product ID format.",
+      });
     }
 
-    // Fetch product from the database
     const product = await Product.findById(productId);
 
     if (!product) {
-      return res.status(404).json({ success: false, message: `Product not found for productId: ${productId}` });
+      return res.status(404).json({
+        success: false,
+        message: `Product not found for productId: ${productId}`,
+      });
     }
 
-    // Return the product data
-    return res.json({ success: true, product });
+    return res.status(200).json({ success: true, product });
   } catch (err) {
     console.error("Error fetching product data:", err);
-    return res.status(500).json({ success: false, message: 'An error occurred while fetching the product data.' });
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching the product data.",
+    });
   }
-},
-
-
-
-
+};
 
 
 exports.getProductBySlug = async (req, res) => {
   try {
-    // Fetching the slug from the request parameters
     const slug = req.params.slug;
 
-    // Find the product with the matching slug
+    if (!slug) {
+      return res.status(400).json({
+        success: false,
+        message: "Slug is required in the URL params.",
+      });
+    }
+
     const product = await Product.findOne({ slug });
 
     if (!product) {
-      // If no product is found, return a 404 error
-      return res.status(404).json({ message: 'Product not found' });
+      return res.status(404).json({
+        success: false,
+        message: `Product not found for slug: ${slug}`,
+      });
     }
 
-    // Return the product as JSON if found
-    res.status(200).json(product);
+    return res.status(200).json({ success: true, product });
   } catch (error) {
-    // Handle server errors and respond with an appropriate message
-    console.error('Error fetching product:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error("Error fetching product:", error);
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching the product.",
+    });
   }
 };
