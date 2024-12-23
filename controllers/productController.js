@@ -330,21 +330,32 @@ exports.getAllProducts = async (req, res) => {
 
 exports.searchProducts = async (req, res) => {
   try {
-    const searchTerm = req.params.term;
+    // Extract the search term from request parameters
+    const searchTerm = req.params.searchTerm; // Match the parameter name in the route
+    console.log("Search term received:", searchTerm);
+
+    // Check if the search term is provided
+    if (!searchTerm || searchTerm.trim() === "") {
+      return res.status(400).json({
+        success: false,
+        message: "Search term is required and cannot be empty.",
+      });
+    }
+
     console.log("Search term received:", searchTerm);
 
     // Construct the $search query using MongoDB Atlas Full-Text Search
     const searchQuery = {
       $search: {
-        index: "default", // Replace with your custom index name, if applicable
+        index: "default", // Replace with your custom index name if applicable
         compound: {
           should: [
             {
               text: {
                 query: searchTerm,
                 path: "name",
-                score: { boost: { value: 5 } }, // High priority boost
-                fuzzy: { maxEdits: 2, prefixLength: 2 }, // Allow typos and autocomplete
+                score: { boost: { value: 5 } },
+                fuzzy: { maxEdits: 2, prefixLength: 2 },
               },
             },
             {
@@ -381,7 +392,7 @@ exports.searchProducts = async (req, res) => {
                   "variations.value",
                   "variation_options.title",
                 ],
-                fuzzy: { maxEdits: 1, prefixLength: 2 }, // Apply fuzzy matching
+                fuzzy: { maxEdits: 1, prefixLength: 2 },
               },
             },
           ],
@@ -392,7 +403,7 @@ exports.searchProducts = async (req, res) => {
     // Execute the aggregation pipeline with the $search stage
     const products = await Product.aggregate([
       searchQuery,
-      { $limit: 100 }, // Limit the results to the top 10 matches
+      { $limit: 100 }, // Limit the results to the top 100 matches
       {
         $project: {
           name: 1,
@@ -401,22 +412,34 @@ exports.searchProducts = async (req, res) => {
           bodyColor: 1,
           "variation_options.title": 1,
           slug: 1,
-          score: { $meta: "searchScore" }, // Include search scores for debugging or ranking
+          score: { $meta: "searchScore" },
         },
       },
     ]);
 
-    // Return products or a message if none found
+    // Respond with the fetched products or a message if none are found
     if (products.length > 0) {
-      return res.json({ success: true, message: "Products fetched successfully", products });
+      return res.status(200).json({
+        success: true,
+        message: "Products fetched successfully.",
+        products,
+      });
     } else {
-      return res.json({ success: false, message: "No products found" });
+      return res.status(404).json({
+        success: false,
+        message: "No products found.",
+      });
     }
   } catch (err) {
-    console.error("Error encountered:", err);
-    return res.status(500).json({ success: false, message: err.message });
+    // Log and respond with the error details
+    console.error("Error in searchProducts:", err.message);
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching products. Please try again later.",
+    });
   }
 };
+
 
 
 
