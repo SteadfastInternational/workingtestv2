@@ -30,19 +30,23 @@ const app = express();
 // Dynamic CORS origin validation
 const corsOptions = {
   origin: (origin, callback) => {
+    // Allowed origins
     const allowedOrigins = [
       process.env.CLIENT_URL || "https://www.steadfast.ng",
-      "http://localhost:4100",  "http://localhost:3000",
+      "http://localhost:4100",
+      "http://localhost:3000", "https://www.steadfast.ng"
     ];
+    
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error("Not allowed by CORS"));
     }
   },
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+  methods: ["GET", "POST", "PUT", "DELETE"], // Allowed methods
+  allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
 };
+
 
 app.use(cors(corsOptions));
 
