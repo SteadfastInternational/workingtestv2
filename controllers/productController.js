@@ -441,3 +441,30 @@ exports.getProductById = async (req, res) => {
     return res.status(500).json({ success: false, message: err.message });
   }
 };
+
+
+
+
+
+
+exports.getProductBySlug = async (req, res) => {
+  try {
+    // Fetching the slug from the request parameters
+    const slug = req.params.slug;
+
+    // Find the product with the matching slug
+    const product = await Product.findOne({ slug });
+
+    if (!product) {
+      // If no product is found, return a 404 error
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    // Return the product as JSON if found
+    res.status(200).json(product);
+  } catch (error) {
+    // Handle server errors and respond with an appropriate message
+    console.error('Error fetching product:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
