@@ -1,23 +1,30 @@
 const Cart = require('../models/cart');
 const Product = require('../models/products');
 const Coupon = require('../models/coupon');
-const Address = require('../models/address');
 const logger = require('../utils/logger');
 const { initiatePayment } = require('../controllers/PaymentController');
-
-
 const { v4: uuidv4 } = require('uuid'); // For generating unique cart IDs
 
 const createCart = async (req, res) => {
   try {
     // Ensure the user is logged in
     if (!req.user) {
-      const errorMessage = 'User not authenticated. Cart creation failed.';
+      const errorMessage = 'User  not authenticated. Cart creation failed.';
       logger.error(errorMessage);
       return res.status(401).json({ message: errorMessage });
     }
 
-    const { items, couponCode } = req.body;
+    const { items, couponCode, address } = req.body; // Extract address from request body
+
+    // Validate address fields
+    const requiredAddressFields = ['firstName', 'lastName', 'phoneNumber', 'alternativePhoneNumber', 'city', 'country', 'apartment'];
+    for (const field of requiredAddressFields) {
+      if (!address[field]) {
+        const errorMessage = `${field} is required in the address.`;
+        logger.error(`Error creating cart: ${errorMessage}`);
+        return res.status(400).json({ message: errorMessage });
+      }
+    }
 
     if (!items || items.length === 0) {
       const errorMessage = 'Items are required to create a cart.';
@@ -103,44 +110,44 @@ const createCart = async (req, res) => {
 
     const finalPrice = totalCartPrice - discountAmount;
 
-    const address = await Address.findOne({ userId: req.user._id });
-    if (!address) {
-      const errorMessage = 'Address not found for this user.';
-      logger.error(`Error creating cart: ${errorMessage}`);
-      return res.status(404).json({ message: errorMessage });
-    }
-
-    const formattedAddress = address.formattedAddress;
-
     // Create the new cart
-const newCart = new Cart({
-  userId: req.user._id, // Include userId here
-  cartId: uuidv4(), // Generate a unique cart ID
-  userFirstName: req.user.firstName,
-  userLastName: req.user.lastName,
-  email: req.user.email,
-  items: parsedItems,
-  totalCartPrice: finalPrice,
-  coupon: {
-    code: couponCode || null,
-    discountPercentage,
-    appliedAt: couponCode ? new Date() : null,
-  },
-  address: formattedAddress,
-});
+    
+    const newCart = new Cart({
+      userId: req.user._id, // Include userId here
+      cartId: uuidv4(), // Generate a unique cart ID
+      userFirstName: req.user.firstName,
+      userLastName: req.user.lastName,
+      email: req.user.email,
+      items: parsedItems,
+      totalCartPrice: finalPrice,
+      coupon: {
+        code: couponCode || null,
+        discountPercentage,
+        appliedAt: couponCode ? new Date() : null,
+      },
+      address: {
+        firstName: address.firstName,
+        lastName: address.lastName,
+        phoneNumber: address.phoneNumber,
+        alternativePhoneNumber: address.alternativePhoneNumber,
+        city: address.city,
+        country: address.country,
+        apartment: address.apartment,
+        note: address.note || null,
+      },
+    });
 
-await newCart.save();
+    await newCart.save();
 
-// Initiate payment with the userId included
-const paymentUrl = await initiatePayment(
-  newCart.cartId, 
-  finalPrice, 
-  req.user.email, 
-  `${req.user.firstName} ${req.user.lastName}`, 
-  formattedAddress, 
-  req.user._id // Pass userId as part of the payment initiation
-);
-
+    // Initiate payment with the userId included
+    const paymentUrl = await initiatePayment(
+      newCart.cartId, 
+      finalPrice, 
+      req.user.email, 
+      `${req.user.firstName} ${req.user.lastName}`, 
+      newCart.address, // Pass the new address structure
+      req.user._id // Pass userId as part of the payment initiation
+    );
 
     return res.status(201).json({
       message: 'Cart created successfully.',

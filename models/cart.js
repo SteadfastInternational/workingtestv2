@@ -5,7 +5,7 @@ const cartSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: 'User ',
       required: true,
       set: (value) => String(value),  // Convert ObjectId to string before saving
     },
@@ -82,8 +82,14 @@ const cartSchema = new mongoose.Schema(
       default: 'Pending',
     },
     address: {
-      type: String,
-      default: null,
+      firstName: { type: String, required: true },
+      lastName: { type: String, required: true },
+      phoneNumber: { type: String, required: true },
+      alternativePhoneNumber: { type: String, default: null },
+      city: { type: String, required: true },
+      country: { type: String, required: true },
+      apartment: { type: String, required: true },
+      note: { type: String, default: null },
     },
   },
   { timestamps: true }
@@ -106,11 +112,8 @@ cartSchema.pre('save', async function (next) {
         }
       }
 
-      // Fetch the user's address
-      const Address = mongoose.model('Address');
-      const address = await Address.findOne({ userId: this.userId });
-
-      this.address = address ? address.formattedAddress : 'Address not found';
+      // No longer fetching the address from another model
+      // Instead, the address will be set directly from the checkout process
 
       next();
     } catch (error) {

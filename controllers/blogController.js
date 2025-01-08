@@ -4,33 +4,36 @@ const asyncHandler = require('express-async-handler');
 
 // Create a Blog
 exports.createBlog = asyncHandler(async (req, res) => {
-  const { title, content, excerpt, author, tags, categories } = req.body;
+  const { title, shortDesc, description, category, tag, thumbImg, coverImg, subImg } = req.body;
 
-  if (!title || !content || !excerpt || !author) {
+  // Validate required fields
+  if (!title || !shortDesc || !description || !category || !tag || !thumbImg || !coverImg) {
     return res.status(400).json({ message: 'All required fields must be filled' });
   }
 
   // Upload images to Cloudinary if provided
   const images = [];
-  if (req.files && req.files.images) {
-    for (const file of req.files.images) {
-      const uploadResult = await cloudinary.uploader.upload(file.path, {
-        folder: 'blogs',
-      });
-      images.push({ url: uploadResult.secure_url, alt: file.originalname });
+  if (req.files && req.files.subImages) {
+    for (const file of req.files.subImages) {
+      const uploadResult = await cloudinary.uploader.upload(file.path, { folder: 'blogs' });
+      images.push(uploadResult.secure_url);
     }
   }
 
+  // Create a new blog entry with the permanent 'Steadfast International' author
   const blog = new Blog({
     title,
-    content,
-    excerpt,
-    author,
-    tags,
-    categories,
-    images,
+    shortDesc,
+    description,
+    category,
+    tag,
+    author: 'Steadfast International', // Set the author as "Steadfast International"
+    thumbImg,
+    coverImg,
+    subImg: images,
   });
 
+  // Save the blog
   const savedBlog = await blog.save();
   res.status(201).json(savedBlog);
 });
@@ -38,8 +41,9 @@ exports.createBlog = asyncHandler(async (req, res) => {
 // Update a Blog
 exports.updateBlog = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { title, content, excerpt, tags, categories, status } = req.body;
+  const { title, shortDesc, description, category, tag, thumbImg, coverImg, subImg } = req.body;
 
+  // Find the blog by ID
   const blog = await Blog.findById(id);
 
   if (!blog) {
@@ -48,22 +52,23 @@ exports.updateBlog = asyncHandler(async (req, res) => {
 
   // Update fields
   if (title) blog.title = title;
-  if (content) blog.content = content;
-  if (excerpt) blog.excerpt = excerpt;
-  if (tags) blog.tags = tags;
-  if (categories) blog.categories = categories;
-  if (status) blog.status = status;
+  if (shortDesc) blog.shortDesc = shortDesc;
+  if (description) blog.description = description;
+  if (category) blog.category = category;
+  if (tag) blog.tag = tag;
+  if (thumbImg) blog.thumbImg = thumbImg;
+  if (coverImg) blog.coverImg = coverImg;
+  if (subImg) blog.subImg = subImg;
 
   // Handle image updates
-  if (req.files && req.files.images) {
-    for (const file of req.files.images) {
-      const uploadResult = await cloudinary.uploader.upload(file.path, {
-        folder: 'blogs',
-      });
-      blog.images.push({ url: uploadResult.secure_url, alt: file.originalname });
+  if (req.files && req.files.subImages) {
+    for (const file of req.files.subImages) {
+      const uploadResult = await cloudinary.uploader.upload(file.path, { folder: 'blogs' });
+      blog.subImg.push(uploadResult.secure_url);
     }
   }
 
+  // Save the updated blog
   const updatedBlog = await blog.save();
   res.status(200).json(updatedBlog);
 });
@@ -72,6 +77,7 @@ exports.updateBlog = asyncHandler(async (req, res) => {
 exports.deleteBlog = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
+  // Find the blog by ID
   const blog = await Blog.findById(id);
 
   if (!blog) {
@@ -79,36 +85,40 @@ exports.deleteBlog = asyncHandler(async (req, res) => {
   }
 
   // Remove associated images from Cloudinary
-  for (const image of blog.images) {
-    const publicId = image.url.split('/').pop().split('.')[0];
+  for (const image of blog.subImg) {
+    const publicId = image.split('/').pop().split('.')[0];
     await cloudinary.uploader.destroy(`blogs/${publicId}`);
   }
 
+  // Remove the blog
   await blog.remove();
   res.status(200).json({ message: 'Blog deleted successfully' });
 });
 
-// Fetch Blogs with Pagination and Optional Search
+// Fetch Blogs with Pagination and Optional Search, including category filter
 exports.getBlogs = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10, search = '', category = '' } = req.query;
 
   const query = {};
+  
+  // Search by text content if search term is provided
   if (search) {
-    query.$text = { $search: search };
+    query.$text = { $search: search };  // Text search
   }
+
+  // Filter by category if provided
   if (category) {
-    query.categories = category;
+    query.category = category;  // Filter by category
   }
 
   const options = {
     page: parseInt(page, 10),
     limit: parseInt(limit, 10),
-    populate: 'author',
-    sort: { createdAt: -1 },
+    sort: { createdAt: -1 },  // Sort by creation date in descending order
   };
 
   try {
-    const blogs = await Blog.paginate(query, options);
+    const blogs = await Blog.paginate(query, options);  // Paginate blogs
     res.status(200).json(blogs);
   } catch (error) {
     res.status(500).json({ message: 'Error fetching blogs', error });
@@ -119,14 +129,15 @@ exports.getBlogs = asyncHandler(async (req, res) => {
 exports.getBlogById = asyncHandler(async (req, res) => {
   const { id } = req.params;
 
-  const blog = await Blog.findById(id).populate('author comments.user');
+  // Find the blog by ID and populate author and images
+  const blog = await Blog.findById(id).populate('author');
 
   if (!blog) {
     return res.status(404).json({ message: 'Blog not found' });
   }
 
   // Increment views
-  blog.views += 1;
+  blog.views = (blog.views || 0) + 1;
   await blog.save();
 
   res.status(200).json(blog);

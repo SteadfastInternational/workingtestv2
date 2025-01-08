@@ -53,7 +53,15 @@ const initiatePayment = async (cartId, totalPrice, email, userName, formattedAdd
       {
         email,
         amount: totalPrice * 100, // Amount in kobo (100 kobo = 1 Naira)
-        metadata: { cartId, formattedAddress, userName, email, userId: userIdString,  cartItems: []}, // Ensure userId is a string
+        metadata: { 
+          cartId, 
+          formattedAddress, 
+          userName, 
+          email, 
+          userId: userIdString,  
+          cartItems: [] 
+        }, 
+        callback_url: 'https://yourdomain.com/order-confirmation' // Add your callback URL here
       },
       { headers: { Authorization: `Bearer ${PAYSTACK_SECRET_KEY}` } }
     );

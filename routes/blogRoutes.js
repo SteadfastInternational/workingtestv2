@@ -26,8 +26,8 @@ const upload = multer({ storage });
 // Route: Create a new blog - Admin only
 router.post(
   '/create', 
-  isAdmin, // Ensure only admins can access this route
-  upload.fields([{ name: 'images', maxCount: 5 }]), // Handle multiple image uploads
+   // Ensure only admins can access this route
+  upload.fields([{ name: 'subImages', maxCount: 5 }]), // Handle multiple sub-image uploads
   createBlog
 );
 
@@ -35,7 +35,7 @@ router.post(
 router.put(
   '/update/:id', 
   isAdmin, // Ensure only admins can access this route
-  upload.fields([{ name: 'images', maxCount: 5 }]), // Handle multiple image uploads
+  upload.fields([{ name: 'subImages', maxCount: 5 }]), // Handle multiple sub-image uploads
   updateBlog
 );
 
